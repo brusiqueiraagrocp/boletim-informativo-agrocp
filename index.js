@@ -8,13 +8,13 @@ const fs = require('fs').promises;
 const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
 
 const iconesClimaticos = {
-    "Ensolarado": "https://ibb.co/FmNdV6w",
-    "Parcialmente Nublado": "https://ibb.co/bKwRJ38",
-    "Nublado": "https://ibb.co/KNNDhhk",
-    "Chuva": "https://ibb.co/R3yPMhb",
-    "Neve": "https://ibb.co/Bqr2DBj",
-    "Vento": "https://ibb.co/NFrfYFL",
-    "Tempestade": "https://ibb.co/gj0PQm0"
+    "Ensolarado": "wi-day-sunny",
+    "Parcialmente Nublado": "wi-day-cloudy",
+    "Nublado": "wi-cloudy",
+    "Chuva": "wi-rain",
+    "Neve": "wi-snow",
+    "Vento": "wi-windy",
+    "Tempestade": "wi-thunderstorm"
 };
 
 
@@ -23,21 +23,29 @@ async function buscarPrevisaoTempo(idCidade) {
         const url = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
         const response = await axios.get(url);
         const dados = response.data[0];
-        const iconeUrl = iconesClimaticos[dados.WeatherText] || "https://cdn-icons-png.flaticon.com/128/1503/1503692.png";
+
+        // Certifique-se de que os campos existem na resposta da API
+        const temperatura = dados.Temperature?.Metric?.Value ?? 'N/A';
+        const sensacao = dados.RealFeelTemperature?.Metric?.Value ?? 'N/A';
+        const pressao = dados.Pressure?.Metric?.Value ?? 'N/A';
+
+        const iconeClasse = iconesClimaticos[dados.WeatherText] || "wi-na";
         
         return {
-            temperatura: dados.Temperature.Metric.Value + '°C',
+            temperatura: temperatura + '°C',
+            sensacao: sensacao + '°C',
             chovendo: dados.HasPrecipitation ? 'Sim' : 'Não',
             humidade: dados.RelativeHumidity + '%',
-            vento: dados.Wind.Speed.Metric.Value + ' m/s', // Adicione a velocidade do vento
-            condicaoClimatica: dados.WeatherText,
-            iconeUrl
+            vento: dados.Wind?.Speed?.Metric?.Value ? dados.Wind.Speed.Metric.Value + ' km/h' : 'N/A',
+            pressao: pressao + ' hPa',
+            iconeClasse: iconeClasse
         };
     } catch (error) {
         console.error(`Erro ao buscar previsão do tempo: ${error}`);
         return null;
     }
 }
+
 
 
 async function extrairNoticias(url) {
