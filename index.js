@@ -4,21 +4,40 @@ const nodemailer = require('nodemailer');
 const handlebars = require('handlebars');
 const fs = require('fs').promises;
 
- //Adicione no topo do seu arquivo
-const apiKeyClimatempo = '573b14e6b0e45d20f009bb24901b72 93';
+//Adicione no topo do seu arquivo
+const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
+
+const iconesClimaticos = {
+    "Ensolarado": "https://ibb.co/FmNdV6w",
+    "Parcialmente Nublado": "https://ibb.co/bKwRJ38",
+    "Nublado": "https://ibb.co/KNNDhhk",
+    "Chuva": "https://ibb.co/R3yPMhb",
+    "Neve": "https://ibb.co/Bqr2DBj",
+    "Vento": "https://ibb.co/NFrfYFL",
+    "Tempestade": "https://ibb.co/gj0PQm0"
+};
+
 
 async function buscarPrevisaoTempo(idCidade) {
     try {
-        const url = `http://api.openweathermap.org/data/2.5/weather?id=${idCidade}&appid=${apiKeyClimatempo}&units=metric`;
+        const url = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
         const response = await axios.get(url);
-        return response.data;
+        const dados = response.data[0];
+        const iconeUrl = iconesClimaticos[dados.WeatherText] || "https://cdn-icons-png.flaticon.com/128/1503/1503692.png";
+        
+        return {
+            temperatura: dados.Temperature.Metric.Value + '°C',
+            chovendo: dados.HasPrecipitation ? 'Sim' : 'Não',
+            humidade: dados.RelativeHumidity + '%',
+            vento: dados.Wind.Speed.Metric.Value + ' m/s', // Adicione a velocidade do vento
+            condicaoClimatica: dados.WeatherText,
+            iconeUrl
+        };
     } catch (error) {
-        console.error(`Erro ao buscar previsão do tempo para a cidade ID ${idCidade}:`, error);
+        console.error(`Erro ao buscar previsão do tempo: ${error}`);
         return null;
     }
 }
-
-
 
 
 async function extrairNoticias(url) {
@@ -94,41 +113,30 @@ async function enviarEmail(destinatario, assunto, html) {
 }
 
 async function main() {
-    const idCidadeTresPontas = '3446077'; 
-    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
-   
-    const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/', 'feed-post-link', 'p.content-text__container', 'a');
-    const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/', '.bastian-page h2', 'a');
-    const noticiasCanalRural = await extrairNoticias('https://www.canalrural.com.br/agricultura/', '.post-title-feed-lg, .post-title-feed-xl', '.feed-link');
-   
+    const idCidadeTresPontas = '39227';
 
+    const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/');
+    const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/');
+    const noticiasCanalRural = await extrairNoticias('https://www.canalrural.com.br/agricultura/');
 
     const palavrasChave = [
         'café', 'soja', 'milho', 'agro', 'agronegócio',
-        'trigo', 'cana-de-açúcar', 'pecuária', 'sustentabilidade', 
+        'trigo', 'cana-de-açúcar', 'pecuária', 'sustentabilidade',
         'exportação', 'mercado', 'tecnologia agrícola', 'política agrícola',
         'produção orgânica', 'fertilizantes', 'biotecnologia', 'irrigação',
         'segurança alimentar', 'comércio internacional', 'desenvolvimento rural', 'agrotóxico', 'Três Pontas',
-        'Varginha', 'Fertilizante', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
-        
+        'Fertilizante', 'Fertilizantes', 'Adubo', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
     ];
     const noticiasFiltradas = filtrarPorPalavrasChave([...noticiasG1Agronegocios, ...noticiasSulDeMinas, ...noticiasCanalRural], palavrasChave);
 
+    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
+
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
-    console.log(noticiasFiltradas);
-    const htmlFinal = template({ noticias: noticiasFiltradas}); //previsaoTempo });
-    /*const htmlTeste = template({
-        noticias: [
-            { titulo: "Notícia Teste", descricao: "Descrição teste", link: "http://exemplo.com" }
-        ]
-    });
-    */
+    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo });
+    console.log(noticiasFiltradas, previsaoTempo);
 
-
-
-      
-    await enviarEmail('siqueirabruno455@gmail.com', 'Boletim Informativo AgroCP', htmlFinal);
+    await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
 }
 
 main();
