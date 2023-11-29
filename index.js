@@ -123,7 +123,7 @@ async function enviarEmail(destinatario, assunto, html) {
         secure: false,
         auth: {
             user: 'no-reply@agrocp.agr.br',
-            pass: 'slflsfmghcnlgnfx'
+            pass: 'senhadeapp'
         }
     });
 
