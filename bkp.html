@@ -1,0 +1,31 @@
+<!-- Conteúdo Principal -->
+<div class="main-content">
+    <!-- Bloco lado a lado para Previsão do Tempo e Cotações -->
+    <div class="side-by-side">
+        <!-- Caixa de Previsão do Tempo -->
+        <div class="weather-card">
+            <!-- Conteúdo existente da Previsão do Tempo vai aqui -->
+        </div>
+
+        <!-- Caixa de Cotações -->
+        <div class="quotes-section">
+            <h2>Cotações AgroCP</h2>
+            {{#each cotacoes}}
+            <div class="quote-item">
+                <h3>{{this.produto}}</h3>
+                <p>Preço: {{this.preco}}</p>
+            </div>
+            {{/each}}
+        </div>
+    </div>
+
+    <!-- Bloco separado para Notícias -->
+    <div class="news-section">
+        <!-- Conteúdo existente de Notícias vai aqui -->
+    </div>
+</div>
+
+<!-- Rodapé existente -->
+<div class="footer">
+    <!-- Conteúdo do Rodapé -->
+</div>

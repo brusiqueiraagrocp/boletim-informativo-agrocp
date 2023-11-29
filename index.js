@@ -1,23 +1,67 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const nodemailer = require('nodemailer');
+const Parser = require('rss-parser');
 const handlebars = require('handlebars');
 const fs = require('fs').promises;
 
- //Adicione no topo do seu arquivo
+
+//Adicione no topo do seu arquivo
 const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
+
+const parser = new Parser();
+
+async function getMarketNews(url) {
+    const feed = await parser.parseURL(url);
+    return feed.items.map(item => ({
+        titulo: item.title,
+        descricao: item.contentSnippet,
+        link: item.link
+    }));
+}
+
+
+
+const iconesClimaticos = {
+    "Ensolarado": "wi-day-sunny",
+    "Parcialmente Nublado": "wi-day-cloudy",
+    "Nublado": "wi-cloudy",
+    "Chuva": "wi-rain",
+    "Neve": "wi-snow",
+    "Vento": "wi-windy",
+    "Tempestade": "wi-thunderstorm"
+};
+
 
 async function buscarPrevisaoTempo(idCidade) {
     try {
-        // A URL depende de qual endpoint da API do AccuWeather você quer usar
         const url = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
         const response = await axios.get(url);
-        return response.data;
+        const dados = response.data[0];
+
+        // Certifique-se de que os campos existem na resposta da API
+        const temperatura = dados.Temperature?.Metric?.Value ?? 'N/A';
+        const sensacao = dados.RealFeelTemperature?.Metric?.Value ?? 'N/A';
+        const pressao = dados.Pressure?.Metric?.Value ?? 'N/A';
+
+        const iconeClasse = iconesClimaticos[dados.WeatherText] || "wi-na";
+        
+        return {
+            temperatura: temperatura + '°C',
+            sensacao: sensacao + '°C',
+            chovendo: dados.HasPrecipitation ? 'Sim' : 'Não',
+            humidade: dados.RelativeHumidity + '%',
+            vento: dados.Wind?.Speed?.Metric?.Value ? dados.Wind.Speed.Metric.Value + ' km/h' : 'N/A',
+            pressao: pressao + ' hPa',
+            iconeClasse: iconeClasse
+        };
     } catch (error) {
-        console.error(`Erro ao buscar previsão do tempo para a cidade ID ${idCidade}:`, error);
+        console.error(`Erro ao buscar previsão do tempo: ${error}`);
         return null;
     }
 }
+
+
 
 async function extrairNoticias(url) {
     try {
@@ -27,24 +71,29 @@ async function extrairNoticias(url) {
 
         let seletorTitulo;
         let seletorLink;
-        let seletorConteudo; // Adicione um seletor para o conteúdo da matéria
+      
 
-        if (url.includes('g1.globo.com')) {
+        if (url.includes('g1.globo.com','globorural.globo.com' )) {
             seletorTitulo = 'p'; // Seletor do título para o G1
             seletorLink = '.feed-post-link'; // Seletor do link para o G1
-            seletorConteudo = '.content-text__container'; // Seletor do conteúdo para o G1
+            
         } else if (url.includes('canalrural.com.br')) {
             seletorTitulo = '.post-title-feed-xl, .post-title-feed-lg'; // Seletor do título para o Canal Rural
             seletorLink = '.feed-link'; // Seletor do link para o Canal Rural
-            seletorConteudo = '.post-content'; // Seletor do conteúdo para o Canal Rural
-        }
+            
+        
+        } else if (url.includes('globorural.globo.com/especiais/futuro-do-agro/')) {
+           seletorTitulo = 'a.bstn-dedupe-url'; // Seletor do título para Globo Rural
+           seletorLink = 'a.bstn-dedupe-url'
+
+            }
 
         $(seletorLink).each((i, element) => {
             const titulo = $(element).find(seletorTitulo).text().trim();
             const link = $(element).attr('href');
-            const conteudo = $(element).closest(seletorConteudo).text().trim(); // Extrai o conteúdo da matéria
+           
 
-            noticias.push({ titulo, link, conteudo });
+            noticias.push({ titulo, link });
         });
 
         console.log(noticias);
@@ -69,15 +118,17 @@ function filtrarPorPalavrasChave(noticias, palavrasChave) {
 
 async function enviarEmail(destinatario, assunto, html) {
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.office365.com',
+        port: 587,
+        secure: false,
         auth: {
-            user: 'siqueirabruno455@gmail.com',
-            pass: 'xblo odqw itxy axlp'
+            user: 'no-reply@agrocp.agr.br',
+            pass: 'slflsfmghcnlgnfx'
         }
     });
 
     const mailOptions = {
-        from: 'siqueirabruno455@gmail.com',
+        from: 'no-reply@agrocp.agr.br',
         to: destinatario,
         subject: assunto,
         html: html
@@ -91,69 +142,72 @@ async function enviarEmail(destinatario, assunto, html) {
     }
 }
 
+async function buscarCotacoes() {
+    try {
+        // Função auxiliar para extrair cotações de um produto
+        const extrairCotacoes = async (produto, url) => {
+            const response = await axios.get(url);
+            const $ = cheerio.load(response.data);
+
+            const dataUltimaCotacao = $('table.cot-fisicas tfoot tr td').text().trim().split('Atualizado em: ')[1];
+            const cotacao = $('table.cot-fisicas tbody tr td:nth-child(2)').text().trim();
+            const variacao = $('table.cot-fisicas tbody tr td:nth-child(3)').text().trim();
+
+            console.log(`${produto} - Data: ${dataUltimaCotacao}, Cotação: ${cotacao}, Variação: ${variacao}`);
+            return {
+                produto,
+                dataUltimaCotacao,
+                cotacao,
+                variacao
+            };
+        };
+
+        // Extrair cotações para cada produto
+        const cafe = await extrairCotacoes('Café', 'https://www.noticiasagricolas.com.br/cotacoes/cafe');
+        const soja = await extrairCotacoes('Soja', 'https://www.noticiasagricolas.com.br/cotacoes/soja');
+        const milho = await extrairCotacoes('Milho', 'https://www.noticiasagricolas.com.br/cotacoes/milho');
+
+        return { cafe, soja, milho };
+    } catch (error) {
+        console.error(`Erro ao buscar cotações: ${error}`);
+        return null;
+    }
+}
+
+
+
+
 async function main() {
-    const idCidadeTresPontas = '39227'; 
-    
-   
-    const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/', 'feed-post-link', 'p.content-text__container', 'a');
-    const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/', '.bastian-page h2', 'a');
-    const noticiasCanalRural = await extrairNoticias('https://www.canalrural.com.br/agricultura/', '.post-title-feed-lg, .post-title-feed-xl', '.feed-link');
-   
+    const idCidadeTresPontas = '39227';
+
+    const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/');
+    const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/');
+    const noticiasCanalRural = await extrairNoticias('https://www.canalrural.com.br/agricultura/');
+    const noticiasFuturoAgro = await extrairNoticias('https://globorural.globo.com/especiais/futuro-do-agro/');
+    const noticiasGloboRural = await extrairNoticias('https://globorural.globo.com/');
+
+    const noticiasMercado = await getMarketNews('https://br.investing.com/rss/market_overview.rss');
+    const cotacoes = await buscarCotacoes();
 
 
     const palavrasChave = [
         'café', 'soja', 'milho', 'agro', 'agronegócio',
-        'trigo', 'cana-de-açúcar', 'pecuária', 'sustentabilidade', 
+        'trigo', 'cana-de-açúcar', 'pecuária', 'sustentabilidade',
         'exportação', 'mercado', 'tecnologia agrícola', 'política agrícola',
         'produção orgânica', 'fertilizantes', 'biotecnologia', 'irrigação',
         'segurança alimentar', 'comércio internacional', 'desenvolvimento rural', 'agrotóxico', 'Três Pontas',
-        'Fertilizante', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
-        
+        'Fertilizante', 'Fertilizantes', 'Adubo', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
     ];
-    const noticiasFiltradas = filtrarPorPalavrasChave([...noticiasG1Agronegocios, ...noticiasSulDeMinas, ...noticiasCanalRural], palavrasChave);
+    const noticiasFiltradas = filtrarPorPalavrasChave([...noticiasG1Agronegocios, ...noticiasFuturoAgro, ...noticiasSulDeMinas, ...noticiasCanalRural, ...noticiasGloboRural], palavrasChave);
+
+    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
 
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
-    console.log(noticiasFiltradas);
-    
-    /*const htmlTeste = template({
-        noticias: [
-            { titulo: "Notícia Teste", descricao: "Descrição teste", link: "http://exemplo.com" }
-        ]
-    });
-    */
+    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes, noticiasMercado: noticiasMercado });
+    console.log(noticiasFiltradas, previsaoTempo);
 
-    // Chama a função buscarPrevisaoTempo para obter os dados da previsão do tempo
-    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
-
-    if (previsaoTempo) {
-        // Os dados da previsão do tempo estão disponíveis em 'previsaoTempo'
-        console.log('Previsão do Tempo:', previsaoTempo);
-        
-        // Acessando os dados específicos da previsão
-        const temperatura = previsaoTempo[0].Temperature.Metric.Value;
-        const condicaoClimatica = previsaoTempo[0].WeatherText;
-        const humidade = previsaoTempo[0].RelativeHumidity;
-        const indiceUV = previsaoTempo[0].UVIndex;
-        const textoIndiceUV = previsaoTempo[0].UVIndexText;
-        const pressaoAtmosferica = previsaoTempo[0].Pressure.Metric.Value;
-        const tendenciaPressao = previsaoTempo[0].PressureTendency.LocalizedText;
-        const coberturaNuvens = previsaoTempo[0].CloudCover;
-    
-        console.log('Temperatura:', temperatura);
-        console.log('Condição Climática:', condicaoClimatica);
-        console.log('Humidade:', humidade);
-        console.log('Índice UV:', indiceUV, textoIndiceUV);
-        console.log('Pressão Atmosférica:', pressaoAtmosferica, 'Tendência:', tendenciaPressao);
-        console.log('Cobertura de Nuvens:', coberturaNuvens);
-    } else {
-        console.log('Não foi possível obter a previsão do tempo.');
-    }
-
-
-        const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo });
-    
-        await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
+    await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
 }
 
 main();
