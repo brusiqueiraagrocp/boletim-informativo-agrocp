@@ -5,11 +5,12 @@ const handlebars = require('handlebars');
 const fs = require('fs').promises;
 
  //Adicione no topo do seu arquivo
-const apiKeyClimatempo = '573b14e6b0e45d20f009bb24901b72 93';
+const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
 
 async function buscarPrevisaoTempo(idCidade) {
     try {
-        const url = `http://api.openweathermap.org/data/2.5/weather?id=${idCidade}&appid=${apiKeyClimatempo}&units=metric`;
+        // A URL depende de qual endpoint da API do AccuWeather você quer usar
+        const url = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
         const response = await axios.get(url);
         return response.data;
     } catch (error) {
@@ -17,9 +18,6 @@ async function buscarPrevisaoTempo(idCidade) {
         return null;
     }
 }
-
-
-
 
 async function extrairNoticias(url) {
     try {
@@ -94,8 +92,8 @@ async function enviarEmail(destinatario, assunto, html) {
 }
 
 async function main() {
-    const idCidadeTresPontas = '3446077'; 
-    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
+    const idCidadeTresPontas = '39227'; 
+    
    
     const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/', 'feed-post-link', 'p.content-text__container', 'a');
     const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/', '.bastian-page h2', 'a');
@@ -109,7 +107,7 @@ async function main() {
         'exportação', 'mercado', 'tecnologia agrícola', 'política agrícola',
         'produção orgânica', 'fertilizantes', 'biotecnologia', 'irrigação',
         'segurança alimentar', 'comércio internacional', 'desenvolvimento rural', 'agrotóxico', 'Três Pontas',
-        'Varginha', 'Fertilizante', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
+        'Fertilizante', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
         
     ];
     const noticiasFiltradas = filtrarPorPalavrasChave([...noticiasG1Agronegocios, ...noticiasSulDeMinas, ...noticiasCanalRural], palavrasChave);
@@ -117,7 +115,7 @@ async function main() {
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
     console.log(noticiasFiltradas);
-    const htmlFinal = template({ noticias: noticiasFiltradas}); //previsaoTempo });
+    
     /*const htmlTeste = template({
         noticias: [
             { titulo: "Notícia Teste", descricao: "Descrição teste", link: "http://exemplo.com" }
@@ -125,10 +123,37 @@ async function main() {
     });
     */
 
+    // Chama a função buscarPrevisaoTempo para obter os dados da previsão do tempo
+    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
+
+    if (previsaoTempo) {
+        // Os dados da previsão do tempo estão disponíveis em 'previsaoTempo'
+        console.log('Previsão do Tempo:', previsaoTempo);
+        
+        // Acessando os dados específicos da previsão
+        const temperatura = previsaoTempo[0].Temperature.Metric.Value;
+        const condicaoClimatica = previsaoTempo[0].WeatherText;
+        const humidade = previsaoTempo[0].RelativeHumidity;
+        const indiceUV = previsaoTempo[0].UVIndex;
+        const textoIndiceUV = previsaoTempo[0].UVIndexText;
+        const pressaoAtmosferica = previsaoTempo[0].Pressure.Metric.Value;
+        const tendenciaPressao = previsaoTempo[0].PressureTendency.LocalizedText;
+        const coberturaNuvens = previsaoTempo[0].CloudCover;
+    
+        console.log('Temperatura:', temperatura);
+        console.log('Condição Climática:', condicaoClimatica);
+        console.log('Humidade:', humidade);
+        console.log('Índice UV:', indiceUV, textoIndiceUV);
+        console.log('Pressão Atmosférica:', pressaoAtmosferica, 'Tendência:', tendenciaPressao);
+        console.log('Cobertura de Nuvens:', coberturaNuvens);
+    } else {
+        console.log('Não foi possível obter a previsão do tempo.');
+    }
 
 
-      
-    await enviarEmail('siqueirabruno455@gmail.com', 'Boletim Informativo AgroCP', htmlFinal);
+        const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo });
+    
+        await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
 }
 
 main();
