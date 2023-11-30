@@ -1,20 +1,36 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 const nodemailer = require('nodemailer');
+const Parser = require('rss-parser');
+const sharp = require('sharp');
 const handlebars = require('handlebars');
 const fs = require('fs').promises;
+
 
 //Adicione no topo do seu arquivo
 const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
 
+const parser = new Parser();
+
+async function getMarketNews(url) {
+    const feed = await parser.parseURL(url);
+    return feed.items.map(item => ({
+        titulo: item.title,
+        descricao: item.contentSnippet,
+        link: item.link
+    }));
+}
+
+
+
 const iconesClimaticos = {
-    "Ensolarado": "wi-day-sunny",
-    "Parcialmente Nublado": "wi-day-cloudy",
-    "Nublado": "wi-cloudy",
-    "Chuva": "wi-rain",
-    "Neve": "wi-snow",
-    "Vento": "wi-windy",
-    "Tempestade": "wi-thunderstorm"
+    "Ensolarado": "https://iili.io/JxP9qSp.png",
+    "Parcialmente Nublado": "https://iili.io/JxP9nRI.png",
+    "Nublado": "https://iili.io/JxP9KKv.png",
+    "Chuva": "https://iili.io/JxP9CHN.png",
+    "Neve": "https://iili.io/JxP9flR.png",
+    "Vento": "https://iili.io/JxP9oNt.png",
+    "Tempestade": "https://iili.io/JxP9xDX.png"
 };
 
 
@@ -29,8 +45,8 @@ async function buscarPrevisaoTempo(idCidade) {
         const sensacao = dados.RealFeelTemperature?.Metric?.Value ?? 'N/A';
         const pressao = dados.Pressure?.Metric?.Value ?? 'N/A';
 
-        const iconeClasse = iconesClimaticos[dados.WeatherText] || "wi-na";
-        
+        const iconeUrl = iconesClimaticos[dados.WeatherText] || "https://iili.io/JxPJ16b.png";
+
         return {
             temperatura: temperatura + '°C',
             sensacao: sensacao + '°C',
@@ -38,7 +54,7 @@ async function buscarPrevisaoTempo(idCidade) {
             humidade: dados.RelativeHumidity + '%',
             vento: dados.Wind?.Speed?.Metric?.Value ? dados.Wind.Speed.Metric.Value + ' km/h' : 'N/A',
             pressao: pressao + ' hPa',
-            iconeClasse: iconeClasse
+            iconeUrl: iconeUrl
         };
     } catch (error) {
         console.error(`Erro ao buscar previsão do tempo: ${error}`);
@@ -53,32 +69,41 @@ async function extrairNoticias(url) {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
         const noticias = [];
+        const imagemPadrao = 'https://iili.io/JxPVGqB.png'; // URL da imagem padrão
 
-        let seletorTitulo;
-        let seletorLink;
-      
+        let seletorTitulo, seletorLink, seletorImagem;
 
         if (url.includes('g1.globo.com')) {
-            seletorTitulo = 'p'; // Seletor do título para o G1
-            seletorLink = '.feed-post-link'; // Seletor do link para o G1
-            
+            seletorTitulo = 'p';
+            seletorLink = '.feed-post-link';
+            seletorImagem = '.bstn-fd-item-cover picture img'; // Seletor atualizado para imagens do G1
         } else if (url.includes('canalrural.com.br')) {
-            seletorTitulo = '.post-title-feed-xl, .post-title-feed-lg'; // Seletor do título para o Canal Rural
-            seletorLink = '.feed-link'; // Seletor do link para o Canal Rural
-            
-        
-        } else if (url.includes('globorural.globo.com/especiais/futuro-do-agro/')) {
-           seletorTitulo = 'a.bstn-dedupe-url'; // Seletor do título para Globo Rural
-            seletorLink = 'a.bstn-dedupe-url'
+            seletorTitulo = '.post-title-feed-xl, .post-title-feed-lg';
+            seletorLink = '.feed-link';
+            seletorImagem = 'img'; // Seletor para a imagem no Canal Rural
+        }
 
-            }
-
-        $(seletorLink).each((i, element) => {
+        $(seletorLink).each(async (i, element) => {
             const titulo = $(element).find(seletorTitulo).text().trim();
             const link = $(element).attr('href');
-           
+            let imagemUrl;
 
-            noticias.push({ titulo, link });
+            if (url.includes('g1.globo.com')) {
+                imagemUrl = $(element).closest('.feed-post').find(seletorImagem).attr('src');
+            } else if (url.includes('canalrural.com.br')) {
+                imagemUrl = $(element).find(seletorImagem).attr('data-src') || $(element).find(seletorImagem).attr('src');
+            }
+
+            // Se não encontrar a imagem, usa a imagem padrão
+            if (!imagemUrl || imagemUrl.includes('data:image/svg+xml')) {
+                imagemUrl = imagemPadrao;
+            } else if (imagemUrl.endsWith('.svg')) {
+                // Se a imagem for um SVG, converte para PNG
+                const pngBuffer = await sharp(Buffer.from(data)).png().toBuffer();
+                imagemUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
+            }
+
+            noticias.push({ titulo, link, imagem: imagemUrl });
         });
 
         console.log(noticias);
@@ -88,6 +113,12 @@ async function extrairNoticias(url) {
         return [];
     }
 }
+
+
+
+
+
+
 
 
 function filtrarPorPalavrasChave(noticias, palavrasChave) {
@@ -103,15 +134,17 @@ function filtrarPorPalavrasChave(noticias, palavrasChave) {
 
 async function enviarEmail(destinatario, assunto, html) {
     const transporter = nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.office365.com',
+        port: 587,
+        secure: false,
         auth: {
-            user: 'siqueirabruno455@gmail.com',
-            pass: 'xblo odqw itxy axlp'
+            user: 'no-reply@agrocp.agr.br',
+            pass: 'slflsfmghcnlgnfx'
         }
     });
 
     const mailOptions = {
-        from: 'siqueirabruno455@gmail.com',
+        from: 'no-reply@agrocp.agr.br',
         to: destinatario,
         subject: assunto,
         html: html
@@ -127,36 +160,30 @@ async function enviarEmail(destinatario, assunto, html) {
 
 async function buscarCotacoes() {
     try {
-        const urlCotacoes = 'https://globorural.globo.com/cotacoes/';
-        const response = await axios.get(urlCotacoes);
-        const $ = cheerio.load(response.data);
+        // Função auxiliar para extrair cotações de um produto
+        const extrairCotacoes = async (produto, url) => {
+            const response = await axios.get(url);
+            const $ = cheerio.load(response.data);
 
-        // Extrair a data da última cotação
-        const dataUltimaCotacao = $('.cotacao__ultima-cotacao').text().trim();
+            const dataUltimaCotacao = $('table.cot-fisicas tfoot tr td').text().trim().split('Atualizado em: ')[1];
+            const cotacao = $('table.cot-fisicas tbody tr td:nth-child(2)').text().trim();
+            const variacao = $('table.cot-fisicas tbody tr td:nth-child(3)').text().trim();
 
-        // Função auxiliar para extrair a cotação e variação de um produto específico
-        const extrairCotacaoEVariação = (produto) => {
-            const seletorProduto = $('.cotacao__produto').filter(function() {
-                return $(this).text().trim() === produto;
-            });
-
-            const cotacao = seletorProduto.nextAll('.cotacao__valor').find('.cotacao__valor__conteudo').first().text().trim();
-            const variacao = seletorProduto.nextAll('.cotacao__variacao').find('.cotacao__variacao__variado').text().trim();
-
-            return { cotacao, variacao };
+            console.log(`${produto} - Data: ${dataUltimaCotacao}, Cotação: ${cotacao}, Variação: ${variacao}`);
+            return {
+                produto,
+                dataUltimaCotacao,
+                cotacao,
+                variacao
+            };
         };
 
-        // Extrair as cotações e variações
-        const cotacaoCafe = extrairCotacaoEVariação('Café');
-        const cotacaoSoja = extrairCotacaoEVariação('Soja');
-        const cotacaoMilho = extrairCotacaoEVariação('Milho');
+        // Extrair cotações para cada produto
+        const cafe = await extrairCotacoes('Café', 'https://www.noticiasagricolas.com.br/cotacoes/cafe');
+        const soja = await extrairCotacoes('Soja', 'https://www.noticiasagricolas.com.br/cotacoes/soja');
+        const milho = await extrairCotacoes('Milho', 'https://www.noticiasagricolas.com.br/cotacoes/milho');
 
-        return {
-            dataUltimaCotacao,
-            cafe: cotacaoCafe,
-            soja: cotacaoSoja,
-            milho: cotacaoMilho
-        };
+        return { cafe, soja, milho };
     } catch (error) {
         console.error(`Erro ao buscar cotações: ${error}`);
         return null;
@@ -175,6 +202,7 @@ async function main() {
     const noticiasFuturoAgro = await extrairNoticias('https://globorural.globo.com/especiais/futuro-do-agro/');
     const noticiasGloboRural = await extrairNoticias('https://globorural.globo.com/');
 
+    const noticiasMercado = await getMarketNews('https://br.investing.com/rss/market_overview.rss');
     const cotacoes = await buscarCotacoes();
 
 
@@ -192,10 +220,10 @@ async function main() {
 
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
-    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes });
+    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes, noticiasMercado: noticiasMercado });
     console.log(noticiasFiltradas, previsaoTempo);
 
-    await enviarEmail('siqueirabruno455@gmail.com', 'Boletim Informativo AgroCP', htmlFinal);
+    await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
 }
 
 main();
