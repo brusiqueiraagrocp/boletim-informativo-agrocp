@@ -74,42 +74,40 @@ const iconesClimaticos = {
 };
 
 
-async function buscarPrevisaoTempo(idCidade) {
+
+
+
+async function buscarPrevisaoTempo() {
     try {
-        const urlAtual = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
-        const responseAtual = await axios.get(urlAtual);
-        const dadosAtual = responseAtual.data[0];
+        const url = 'https://bolsa.cocatrel.com.br/climatempo';
+        const response = await axios.get(url);
+        const $ = cheerio.load(response.data);
+        const previsaoTempo = [];
 
-        const temperatura = dadosAtual.Temperature?.Metric?.Value ?? 'N/A';
-        const sensacao = dadosAtual.RealFeelTemperature?.Metric?.Value ?? 'N/A';
-        const pressao = dadosAtual.Pressure?.Metric?.Value ?? 'N/A';
+        $('h6').each((i, element) => {
+            const tituloCondicao = $(element).text().trim();
+            const imagemUrl = $(element).find('img').attr('src'); // Use .find em vez de .next
+        
+            if (tituloCondicao && imagemUrl) {
+                previsaoTempo.push({ tituloCondicao, imagemUrl });
+            }
+            console.log(tituloCondicao);
+            console.log(imagemUrl);
+        });
 
-        const iconeUrl = iconesClimaticos[dadosAtual.WeatherText] || "https://iili.io/JxPJ16b.png";
+        console.log(previsaoTempo); // Exibe a lista de condições climáticas
 
-        // Busca pela previsão para os próximos 3 dias
-        const urlPrevisao = `http://dataservice.accuweather.com/forecasts/v1/daily/3day/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true&metric=true`;
-        const responsePrevisao = await axios.get(urlPrevisao);
-        const previsaoDias = responsePrevisao.data.DailyForecasts.map(dia => ({
-            minima: dia.Temperature.Minimum.Value + '°C',
-            maxima: dia.Temperature.Maximum.Value + '°C',
-            clima: dia.Day.IconPhrase
-        }));
-
-        return {
-            temperaturaAtual: temperatura + '°C',
-            sensacaoAtual: sensacao + '°C',
-            chovendo: dadosAtual.HasPrecipitation ? 'Sim' : 'Não',
-            humidade: dadosAtual.RelativeHumidity + '%',
-            vento: dadosAtual.Wind?.Speed?.Metric?.Value ? dadosAtual.Wind.Speed.Metric.Value + ' km/h' : 'N/A',
-            pressao: pressao + ' hPa',
-            iconeUrl: iconeUrl,
-            previsaoProximosDias: previsaoDias
-        };
+        return previsaoTempo;
     } catch (error) {
         console.error(`Erro ao buscar previsão do tempo: ${error}`);
         return null;
     }
 }
+
+
+// Usar a função e imprimir os resultados
+buscarPrevisaoTempo().then(data => console.log(data));
+
 
 const formatDate = () => {
     const date = new Date();
@@ -254,7 +252,7 @@ async function buscarCotacoes() {
 
 
 async function main() {
-    const idCidadeTresPontas = '39227';
+    //const idCidadeTresPontas = '39227';
 
     const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/');
     const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/');
@@ -276,7 +274,7 @@ async function main() {
     ];
     const noticiasFiltradas = filtrarPorPalavrasChave([...noticiasG1Agronegocios, ...noticiasFuturoAgro, ...noticiasSulDeMinas, ...noticiasCanalRural, ...noticiasGloboRural], palavrasChave);
 
-    const previsaoTempo = await buscarPrevisaoTempo(idCidadeTresPontas);
+    const previsaoTempo = await buscarPrevisaoTempo();
 
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
