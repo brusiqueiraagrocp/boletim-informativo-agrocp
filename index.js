@@ -13,13 +13,53 @@ const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
 const parser = new Parser();
 
 async function getMarketNews(url) {
-    const feed = await parser.parseURL(url);
-    return feed.items.map(item => ({
-        titulo: item.title,
-        descricao: item.contentSnippet,
-        link: item.link
-    }));
-}
+    try {
+      const feed = await parser.parseURL(url);
+  
+      const newsPromises = feed.items.map(async (item) => {
+        // Função para obter a URL da imagem a partir do HTML da página do artigo
+        async function getImageUrl(articleUrl) {
+          try {
+            const response = await axios.get(articleUrl);
+            const $ = cheerio.load(response.data);
+            // Encontre a tag de imagem e obtenha o valor do atributo "src"
+            const imageUrl = $('img').attr('src');
+            return imageUrl;
+          } catch (error) {
+            console.error('Erro ao obter a imagem:', error.message);
+            return null;
+          }
+        }
+  
+        const imageUrl = await getImageUrl(item.link);
+  
+        return {
+          titulo: item.title,
+          descricao: item.contentSnippet,
+          link: item.link,
+          imagem: imageUrl,
+        };
+      });
+  
+      // Aguarde todas as promessas de obtenção das notícias e imagens
+      const newsWithImages = await Promise.all(newsPromises);
+  
+      return newsWithImages;
+    } catch (error) {
+      console.error('Erro ao obter notícias:', error.message);
+      return [];
+    }
+  }
+  
+  // Exemplo de uso:
+  const url = 'https://br.investing.com/rss/market_overview.rss'; // URL do feed RSS
+  getMarketNews(url)
+    .then((news) => {
+      console.log('Notícias com imagens:', news);
+    })
+    .catch((err) => {
+      console.error('Erro:', err);
+    });
 
 
 
@@ -36,31 +76,51 @@ const iconesClimaticos = {
 
 async function buscarPrevisaoTempo(idCidade) {
     try {
-        const url = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
-        const response = await axios.get(url);
-        const dados = response.data[0];
+        const urlAtual = `http://dataservice.accuweather.com/currentconditions/v1/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true`;
+        const responseAtual = await axios.get(urlAtual);
+        const dadosAtual = responseAtual.data[0];
 
-        // Certifique-se de que os campos existem na resposta da API
-        const temperatura = dados.Temperature?.Metric?.Value ?? 'N/A';
-        const sensacao = dados.RealFeelTemperature?.Metric?.Value ?? 'N/A';
-        const pressao = dados.Pressure?.Metric?.Value ?? 'N/A';
+        const temperatura = dadosAtual.Temperature?.Metric?.Value ?? 'N/A';
+        const sensacao = dadosAtual.RealFeelTemperature?.Metric?.Value ?? 'N/A';
+        const pressao = dadosAtual.Pressure?.Metric?.Value ?? 'N/A';
 
-        const iconeUrl = iconesClimaticos[dados.WeatherText] || "https://iili.io/JxPJ16b.png";
+        const iconeUrl = iconesClimaticos[dadosAtual.WeatherText] || "https://iili.io/JxPJ16b.png";
+
+        // Busca pela previsão para os próximos 3 dias
+        const urlPrevisao = `http://dataservice.accuweather.com/forecasts/v1/daily/3day/${idCidade}?apikey=${apiKeyAccuWeather}&language=pt-BR&details=true&metric=true`;
+        const responsePrevisao = await axios.get(urlPrevisao);
+        const previsaoDias = responsePrevisao.data.DailyForecasts.map(dia => ({
+            minima: dia.Temperature.Minimum.Value + '°C',
+            maxima: dia.Temperature.Maximum.Value + '°C',
+            clima: dia.Day.IconPhrase
+        }));
 
         return {
-            temperatura: temperatura + '°C',
-            sensacao: sensacao + '°C',
-            chovendo: dados.HasPrecipitation ? 'Sim' : 'Não',
-            humidade: dados.RelativeHumidity + '%',
-            vento: dados.Wind?.Speed?.Metric?.Value ? dados.Wind.Speed.Metric.Value + ' km/h' : 'N/A',
+            temperaturaAtual: temperatura + '°C',
+            sensacaoAtual: sensacao + '°C',
+            chovendo: dadosAtual.HasPrecipitation ? 'Sim' : 'Não',
+            humidade: dadosAtual.RelativeHumidity + '%',
+            vento: dadosAtual.Wind?.Speed?.Metric?.Value ? dadosAtual.Wind.Speed.Metric.Value + ' km/h' : 'N/A',
             pressao: pressao + ' hPa',
-            iconeUrl: iconeUrl
+            iconeUrl: iconeUrl,
+            previsaoProximosDias: previsaoDias
         };
     } catch (error) {
         console.error(`Erro ao buscar previsão do tempo: ${error}`);
         return null;
     }
 }
+
+const formatDate = () => {
+    const date = new Date();
+    return date.toLocaleDateString('pt-BR', {
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric'
+    });
+  };
+  const dataAtual = formatDate();
 
 
 
@@ -114,13 +174,6 @@ async function extrairNoticias(url) {
     }
 }
 
-
-
-
-
-
-
-
 function filtrarPorPalavrasChave(noticias, palavrasChave) {
     console.log("Palavras-chave:", palavrasChave);
 
@@ -158,39 +211,46 @@ async function enviarEmail(destinatario, assunto, html) {
     }
 }
 
+async function extrairCotacoes(url, produto, intervaloInicio, intervaloFim) {
+    try {
+        const response = await axios.get(url);
+        const $ = cheerio.load(response.data);
+
+        let cotacoes = [];
+        $('table tr').each((index, element) => {
+            if (index >= intervaloInicio && index <= intervaloFim) {
+                const descricao = $(element).find('td:nth-child(1)').text().trim();
+                const ultimo = $(element).find('td:nth-child(2)').text().trim();
+                const diferenca = $(element).find('td:nth-child(3)').text().trim();
+                const percentual = $(element).find('td:nth-child(4)').text().trim();
+
+                cotacoes.push({ descricao, ultimo, diferenca, percentual });
+            }
+        });
+
+        console.log(`${produto}:`, cotacoes);
+        return cotacoes;
+    } catch (error) {
+        console.error(`Erro ao extrair cotações de ${produto}: ${error}`);
+        return null;
+    }
+}
+
 async function buscarCotacoes() {
     try {
-        // Função auxiliar para extrair cotações de um produto
-        const extrairCotacoes = async (produto, url) => {
-            const response = await axios.get(url);
-            const $ = cheerio.load(response.data);
+        const url = 'https://bolsa.cocatrel.com.br/cotacao';
 
-            const dataUltimaCotacao = $('table.cot-fisicas tfoot tr td').text().trim().split('Atualizado em: ')[1];
-            const cotacao = $('table.cot-fisicas tbody tr td:nth-child(2)').text().trim();
-            const variacao = $('table.cot-fisicas tbody tr td:nth-child(3)').text().trim();
+        // Ajuste os intervalos de índices conforme a estrutura da tabela na sua página
+        const cotacoesCafe = await extrairCotacoes(url, 'Café', 1, 6);
+        const cotacoesSoja = await extrairCotacoes(url, 'Soja', 7, 11);
+        const cotacoesMilho = await extrairCotacoes(url, 'Milho', 12, 16);
 
-            console.log(`${produto} - Data: ${dataUltimaCotacao}, Cotação: ${cotacao}, Variação: ${variacao}`);
-            return {
-                produto,
-                dataUltimaCotacao,
-                cotacao,
-                variacao
-            };
-        };
-
-        // Extrair cotações para cada produto
-        const cafe = await extrairCotacoes('Café', 'https://www.noticiasagricolas.com.br/cotacoes/cafe');
-        const soja = await extrairCotacoes('Soja', 'https://www.noticiasagricolas.com.br/cotacoes/soja');
-        const milho = await extrairCotacoes('Milho', 'https://www.noticiasagricolas.com.br/cotacoes/milho');
-
-        return { cafe, soja, milho };
+        return { cotacoesCafe, cotacoesSoja, cotacoesMilho };
     } catch (error) {
         console.error(`Erro ao buscar cotações: ${error}`);
         return null;
     }
 }
-
-
 
 
 async function main() {
