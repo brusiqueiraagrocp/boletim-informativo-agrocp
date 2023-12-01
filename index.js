@@ -91,11 +91,10 @@ async function buscarPrevisaoTempo() {
             if (tituloCondicao && imagemUrl) {
                 previsaoTempo.push({ tituloCondicao, imagemUrl });
             }
-            console.log(tituloCondicao);
-            console.log(imagemUrl);
+            
         });
 
-        console.log(previsaoTempo); // Exibe a lista de condições climáticas
+        
 
         return previsaoTempo;
     } catch (error) {
@@ -106,7 +105,7 @@ async function buscarPrevisaoTempo() {
 
 
 // Usar a função e imprimir os resultados
-buscarPrevisaoTempo().then(data => console.log(data));
+//buscarPrevisaoTempo().then(data => console.log(data));
 
 
 const formatDate = () => {
@@ -209,39 +208,25 @@ async function enviarEmail(destinatario, assunto, html) {
     }
 }
 
-async function extrairCotacoes(url, produto, intervaloInicio, intervaloFim) {
-    try {
-        const response = await axios.get(url);
-        const $ = cheerio.load(response.data);
 
-        let cotacoes = [];
-        $('table tr').each((index, element) => {
-            if (index >= intervaloInicio && index <= intervaloFim) {
-                const descricao = $(element).find('td:nth-child(1)').text().trim();
-                const ultimo = $(element).find('td:nth-child(2)').text().trim();
-                const diferenca = $(element).find('td:nth-child(3)').text().trim();
-                const percentual = $(element).find('td:nth-child(4)').text().trim();
-
-                cotacoes.push({ descricao, ultimo, diferenca, percentual });
-            }
-        });
-
-        console.log(`${produto}:`, cotacoes);
-        return cotacoes;
-    } catch (error) {
-        console.error(`Erro ao extrair cotações de ${produto}: ${error}`);
-        return null;
-    }
-}
 
 async function buscarCotacoes() {
     try {
-        const url = 'https://bolsa.cocatrel.com.br/cotacao';
+        const url = 'https://bolsa.cocatrel.com.br/';
 
-        // Ajuste os intervalos de índices conforme a estrutura da tabela na sua página
-        const cotacoesCafe = await extrairCotacoes(url, 'Café', 1, 6);
-        const cotacoesSoja = await extrairCotacoes(url, 'Soja', 7, 11);
-        const cotacoesMilho = await extrairCotacoes(url, 'Milho', 12, 16);
+        // Índices atualizados conforme a nova estrutura da tabela
+        // Segundo elemento para descrição, sexto para fechamento e sétimo para fechamento anterior
+        const indiceDescricao = 2;
+        const indiceFechamento = 6;
+        const indiceFechamentoAnterior = 7;
+
+        const cotacoesCafe = await extrairCotacoes(url, 'Café', indiceDescricao, indiceFechamentoAnterior);
+        const cotacoesSoja = await extrairCotacoes(url, 'Soja', indiceDescricao, indiceFechamentoAnterior);
+        const cotacoesMilho = await extrairCotacoes(url, 'Milho', indiceDescricao, indiceFechamentoAnterior);
+
+        console.log(cotacoesCafe);
+        console.log(cotacoesMilho);
+        console.log(cotacoesSoja);
 
         return { cotacoesCafe, cotacoesSoja, cotacoesMilho };
     } catch (error) {
@@ -249,6 +234,40 @@ async function buscarCotacoes() {
         return null;
     }
 }
+
+async function extrairCotacoes(url, produto) {
+    try {
+        const response = await axios.get(url);
+        const $ = cheerio.load(response.data);
+
+        let cotacao = null;
+        let encontrouProduto = false;
+
+        $('table tr').each((index, element) => {
+            // Verifica se a linha corresponde ao cabeçalho do produto
+            if ($(element).text().includes(produto)) {
+                encontrouProduto = true;
+            }
+
+            // Se encontrou o produto e está na primeira linha de dados
+            if (encontrouProduto && $(element).find('td').length > 1) {
+                const descricao = $(element).find('td:nth-child(2)').text().trim(); // Descrição
+                const fechamento = $(element).find('td:nth-child(6)').text().trim(); // Fechamento
+                const fechamentoAnterior = $(element).find('td:nth-child(7)').text().trim(); // Fechamento anterior
+                cotacao = { descricao, fechamento, fechamentoAnterior };
+                return false; // Sair do loop
+            }
+        });
+
+        console.log(`${produto}:`, cotacao);
+        return cotacao;
+    } catch (error) {
+        console.error(`Erro ao extrair cotações de ${produto}: ${error}`);
+        return null;
+    }
+}
+
+
 
 
 async function main() {
