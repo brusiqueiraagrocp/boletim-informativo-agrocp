@@ -53,7 +53,15 @@
     <div class="header">
       <img src="https://iili.io/JxPfLVS.png" alt="Logo AgroCP" width="280" height="58">
       <h1 style="color: #00672f;">Boletim Informativo</h1>
+      <tr>
+        <td align="center" valign="top"
+        style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 30px;"
+        align="left">
+          <strong>{{dataAtual}}</strong>
+        </td>
+      </tr>
     </div>
+    <div>
     <td
       style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 30px;"
       align="left">
@@ -67,6 +75,7 @@
 
       </i>
     </td>
+  </div>
     <!-- Condições Climáticas -->
     
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -92,10 +101,67 @@
     <p>As notícias mais recentes do setor agro.</p>
 
     <!-- Cotações -->
-    <h2>Cotações de Hoje</h2>
-    <p>Confira as últimas cotações de café, soja e milho.</p>
+<h2>Cotações de Hoje</h2>
+<p>Confira as últimas cotações de café, soja e milho.</p>
+<table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <!-- Cotação de Café -->
+  <tr>
+    <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
+      <div class="weather-item">
+        <img src="https://iili.io/JzFXWLg.png" alt="Ícone de Café" style="width: 20px; height: 20px;">
+        {{cotacoes.cotacoesCafe.descricao}}: Fechamento - {{cotacoes.cotacoesCafe.fechamento}}, Fech. Anterior - {{cotacoes.cotacoesCafe.fechamentoAnterior}}
+      </div>
+    </td>
+  </tr>
+  <!-- Cotação de Soja -->
+  <tr>
+    <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
+      <div class="weather-item">
+        <img src="https://iili.io/JzFXVhF.png" alt="Ícone de Soja" style="width: 20px; height: 20px;">
+         {{cotacoes.cotacoesSoja.descricao}}: Fechamento - {{cotacoes.cotacoesSoja.fechamento}}, Fech. Anterior - {{cotacoes.cotacoesSoja.fechamentoAnterior}}
+      </div>
+    </td>
+  </tr>
+  <!-- Cotação de Milho -->
+  <tr>
+    <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
+      <div class="weather-item">
+        <img src="https://iili.io/JzFXMI1.png" alt="Ícone de Milho" style="width: 20px; height: 20px;">
+         {{cotacoes.cotacoesMilho.descricao}}: Fechamento - {{cotacoes.cotacoesMilho.fechamento}}, Fech. Anterior - {{cotacoes.cotacoesMilho.fechamentoAnterior}}
+      </div>
+    </td>
+  </tr>
+</table>
+
+  
+
+  </table>
 
     <!-- Conteúdo adicional conforme necessário -->
+    <div class="box">
+      <div class="market-news-section">
+          <h2>Notícias do Mercado</h2>
+          <table>
+              {{#each noticiasMercado}}
+              <tr>
+                  <td style="padding-right: 10px;">
+                      <img src="{{this.imagem}}" alt="Imagem da Notícia" style="width: 50px; height: auto;">
+                  </td>
+                  <td>
+                      <p><strong>{{this.titulo}}</strong></p>
+                      <p>{{this.descricao}}</p>
+                      <a href="{{this.link}}">Leia mais</a>
+                  </td>
+              </tr>
+              {{/each}}
+          </table>
+      </div>
+      
+    </div>
+    
+    </div>
+  </td>
+</tr>
   </div>
   <div class="footer">
     AgroCP | Todos os direitos reservados

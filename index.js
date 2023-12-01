@@ -7,8 +7,9 @@ const handlebars = require('handlebars');
 const fs = require('fs').promises;
 
 
+
 //Adicione no topo do seu arquivo
-const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
+//const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
 
 const parser = new Parser();
 
@@ -63,7 +64,7 @@ async function getMarketNews(url) {
 
 
 
-const iconesClimaticos = {
+/*const iconesClimaticos = {
     "Ensolarado": "https://iili.io/JxP9qSp.png",
     "Parcialmente Nublado": "https://iili.io/JxP9nRI.png",
     "Nublado": "https://iili.io/JxP9KKv.png",
@@ -71,13 +72,13 @@ const iconesClimaticos = {
     "Neve": "https://iili.io/JxP9flR.png",
     "Vento": "https://iili.io/JxP9oNt.png",
     "Tempestade": "https://iili.io/JxP9xDX.png"
-};
+};*/
 
 
 
 
 
-async function buscarPrevisaoTempo() {
+/*async function buscarPrevisaoTempo() {
     try {
         const url = 'https://bolsa.cocatrel.com.br/climatempo';
         const response = await axios.get(url);
@@ -102,7 +103,7 @@ async function buscarPrevisaoTempo() {
         return null;
     }
 }
-
+*/
 
 // Usar a função e imprimir os resultados
 //buscarPrevisaoTempo().then(data => console.log(data));
@@ -220,9 +221,9 @@ async function buscarCotacoes() {
         const indiceFechamento = 6;
         const indiceFechamentoAnterior = 7;
 
-        const cotacoesCafe = await extrairCotacoes(url, 'Café', indiceDescricao, indiceFechamentoAnterior);
-        const cotacoesSoja = await extrairCotacoes(url, 'Soja', indiceDescricao, indiceFechamentoAnterior);
-        const cotacoesMilho = await extrairCotacoes(url, 'Milho', indiceDescricao, indiceFechamentoAnterior);
+        const cotacoesCafe = await extrairCotacoes(url, 'Café', indiceDescricao, indiceFechamento, indiceFechamentoAnterior);
+        const cotacoesSoja = await extrairCotacoes(url, 'Soja', indiceDescricao, indiceFechamento, indiceFechamentoAnterior);
+        const cotacoesMilho = await extrairCotacoes(url, 'Milho', indiceDescricao, indiceFechamento, indiceFechamentoAnterior);
 
         console.log(cotacoesCafe);
         console.log(cotacoesMilho);
@@ -297,8 +298,8 @@ async function main() {
 
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
-    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes, noticiasMercado: noticiasMercado });
-    console.log(noticiasFiltradas, previsaoTempo);
+    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes, noticiasMercado: noticiasMercado, dataAtual:dataAtual });
+    
 
     await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
 }

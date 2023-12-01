@@ -18,9 +18,9 @@
       margin: auto;
       background-color: #ffffff;
       padding: 20px;
-      border: 1px solid rgba(0, 103, 47, 0.2);
+      border: 20px solid rgba(0, 103, 47, 0.2);
       /* Verde escuro quase transparente */
-      box-shadow: 0 0 10px rgba(0, 103, 47, 0.2);
+      box-shadow: 0 1 10px #00672f;
       /* Sombra opcional para um efeito mais suave */
     }
 
@@ -39,6 +39,13 @@
       line-height: 1.5;
       font-size: 14px;
     }
+    
+    .content-box {
+    background-color: #ffffff; /* Fundo branco */
+    border: 0px solid #00672f; /* Borda grossa verde escura */
+    padding: 20px; /* Espaçamento interno */
+    margin-bottom: 20px; /* Margem inferior */
+  }
 
     .footer {
       text-align: center;
@@ -50,29 +57,34 @@
 
 <body>
   <div class="container">
-    <div class="header">
-      <img src="https://iili.io/JxPfLVS.png" alt="Logo AgroCP" width="280" height="58">
-      <h1 style="color: #00672f;">Boletim Informativo</h1>
-      <tr>
-        <td align="center" valign="top"
-          style="color: #757575; line-height: 1.5; font-family: Arial, sans-serif; font-size: 12px; padding-bottom: 30px;">
-          {{dataAtual}}
-        </td>
-      </tr>
+    <div class="content-box">
+      <div class="header">
+        <img src="https://iili.io/JxPfLVS.png" alt="Logo AgroCP" width="280" height="58">
+        <h1 style="color: #00672f;">Boletim Informativo</h1>
+        <tr>
+          <td align="center" valign="top"
+          style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 10px;"
+          align="left">
+            <strong>{{dataAtual}}</strong>
+          </td>
+        </tr>
+      </div>
     </div>
-    <td
-      style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 30px;"
-      align="left">
-
-      <i>Acorda,<strong> AgroCP</strong>! É hora de despertar com as mais
-        vibrantes notícias do mundo agro. Exclusivo para nossos assinantes,
-        trazemos todas as manhãs uma colheita de insights e tendências que vão te
-        deixar antenado e preparado para o dia<em>.&nbsp;</em><br>
-
-
-
-      </i>
-    </td>
+    
+    <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;">
+      <td
+        style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 30px;"
+        align="left">
+    
+        <i>Acorda,<strong> AgroCP</strong>! É hora de despertar com as mais
+          vibrantes notícias do mundo agro. Exclusivo para nossos assinantes,
+          trazemos todas as manhãs uma colheita de insights e tendências que vão te
+          deixar antenado e preparado para o dia<em>.&nbsp;</em><br>
+    
+        </i>
+      </td>
+    </div>
+    
     <!-- Condições Climáticas -->
     
     <table border="0" cellpadding="0" cellspacing="0" width="100%">
@@ -80,18 +92,26 @@
         <td align="left" valign="top" style="padding-bottom: 18px;">
           {{#if previsaoTempo}}
           <h2 style="font-size: 18px;">Condições Climáticas Atuais</h2>
-          {{#each previsaoTempo}}
-          <div class="weather-condition" style="display: flex; align-items: center; margin-bottom: 10px;">
-            <h3 style="font-size: 14px; margin-right: 10px; font-weight: bold;">{{this.tituloCondicao}}</h3>
-            <img src="{{this.imagemUrl}}" alt="{{this.tituloCondicao}}" style="width: 40px; height: 40px;">
+          <div style="display: flex; flex-wrap: wrap;">
+            {{#each previsaoTempo}}
+          <row>
+            <div class="weather-condition" style="display: flex; align-items: center; margin-right: 20px; margin-bottom: 10px;">
+              <h3 style="font-size: 14px; margin-right: 10px; font-weight: bold;">{{this.tituloCondicao}}</h3>
+              <img src="{{this.imagemUrl}}" alt="{{this.tituloCondicao}}" style="width: 40px; height: 40px;">
+            </div>
+            
+          </row>
+            
+            {{/each}}
           </div>
-          {{/each}}
           {{else}}
           <p>Previsão do tempo não disponível no momento.</p>
           {{/if}}
         </td>
       </tr>
     </table>
+    
+    
 
     <!-- Notícias -->
     <h2>Últimas Notícias</h2>
@@ -101,36 +121,36 @@
 <h2>Cotações de Hoje</h2>
 <p>Confira as últimas cotações de café, soja e milho.</p>
 <table width="100%" border="0" cellpadding="0" cellspacing="0">
+  <!-- Cotação de Café -->
   <tr>
-    <td style="border-bottom: 1px solid #e0e0e0; padding-top: 30px; padding-bottom: 30px;">
-      <table width="100%" border="0" cellpadding="0" cellspacing="0">
-        <tr>
-          <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
-            <!-- Cotação de Café -->
-            <div class="weather-item">
-              <img src="URL_DO_ICONE_CAFE" alt="Ícone de Café" style="width: 20px; height: 20px;">
-              Café - {{cotacoes.cotacaoCafe.descricao}}: Fechamento - {{cotacoes.cotacaoCafe.fechamento}}, Fech. Anterior - {{cotacoes.cotacaoCafe.fechamentoAnterior}}
-            </div>
-
-            <!-- Cotação de Soja -->
-            <div class="weather-item">
-              <img src="URL_DO_ICONE_SOJA" alt="Ícone de Soja" style="width: 20px; height: 20px;">
-              Soja - {{cotacoes.cotacaoSoja.descricao}}: Fechamento - {{cotacoes.cotacaoSoja.fechamento}}, Fech. Anterior - {{cotacoes.cotacaoSoja.fechamentoAnterior}}
-            </div>
-
-            <!-- Cotação de Milho -->
-            <div class="weather-item">
-              <img src="URL_DO_ICONE_MILHO" alt="Ícone de Milho" style="width: 20px; height: 20px;">
-              Milho - {{cotacoes.cotacaoMilho.descricao}}: Fechamento - {{cotacoes.cotacaoMilho.fechamento}}, Fech. Anterior - {{cotacoes.cotacaoMilho.fechamentoAnterior}}
-            </div>
-          </td>
-        </tr>
-      </table>
+    <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
+      <div class="weather-item">
+        <img src="https://iili.io/JzFXWLg.png" alt="Ícone de Café" style="width: 20px; height: 20px;">
+        {{cotacoes.cotacoesCafe.descricao}}: Fechamento - {{cotacoes.cotacoesCafe.fechamento}}, Fech. Anterior - {{cotacoes.cotacoesCafe.fechamentoAnterior}}
+      </div>
+    </td>
+  </tr>
+  <!-- Cotação de Soja -->
+  <tr>
+    <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
+      <div class="weather-item">
+        <img src="https://iili.io/JzFXVhF.png" alt="Ícone de Soja" style="width: 20px; height: 20px;">
+         {{cotacoes.cotacoesSoja.descricao}}: Fechamento - {{cotacoes.cotacoesSoja.fechamento}}, Fech. Anterior - {{cotacoes.cotacoesSoja.fechamentoAnterior}}
+      </div>
+    </td>
+  </tr>
+  <!-- Cotação de Milho -->
+  <tr>
+    <td align="left" valign="top" style="display: block; margin-bottom: 10px;" valign="top">
+      <div class="weather-item">
+        <img src="https://iili.io/JzFXMI1.png" alt="Ícone de Milho" style="width: 20px; height: 20px;">
+         {{cotacoes.cotacoesMilho.descricao}}: Fechamento - {{cotacoes.cotacoesMilho.fechamento}}, Fech. Anterior - {{cotacoes.cotacoesMilho.fechamentoAnterior}}
+      </div>
     </td>
   </tr>
 </table>
 
-
+  
 
   </table>
 
