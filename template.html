@@ -18,21 +18,25 @@
       margin: auto;
       background-color: #ffffff;
       padding: 50px;
-      border: 10px solid #00672f; 
+      border: 10px solid #00672f;
 
       /* Verde escuro quase transparente */
-      
+
     }
 
     a {
-    text-decoration: none; /* Remove o sublinhado */
-    color: inherit; /* Herda a cor do texto pai (sem alterar a cor) */
-  }
+      text-decoration: none;
+      /* Remove o sublinhado */
+      color: inherit;
+      /* Herda a cor do texto pai (sem alterar a cor) */
+    }
 
-  /* Estilo para os links quando estão sendo hover (passagem do mouse) */
-  a:hover {
-    text-decoration: none; /* Remove o sublinhado no hover */
-  }
+    /* Estilo para os links quando estão sendo hover (passagem do mouse) */
+    a:hover {
+      text-decoration: none;
+      /* Remove o sublinhado no hover */
+    }
+
     img {
       max-width: 100%;
       height: auto;
@@ -48,31 +52,54 @@
       line-height: 1.5;
       font-size: 14px;
     }
-    
+
     .content-box {
-    background-color: #ffffff; /* Fundo branco */
-    
-    padding: 20px; /* Espaçamento interno */
-    margin-bottom: 20px; /* Margem inferior */
-  }
+      background-color: #ffffff;
+      /* Fundo branco */
 
-  .footer {
-  text-align: center;
-  padding: 10px 0 10px;
-  font-size: 15px;
-  background-color: #006400; /* Verde escuro */
-  color: white; /* Cor do texto */
+      padding: 20px;
+      /* Espaçamento interno */
+      margin-bottom: 20px;
+      /* Margem inferior */
+    }
 
-  max-width: 300px; /* Mesma largura máxima que o container */
-  margin: auto; /* Centraliza o rodapé */
-  margin-top: 0; /* Remove a margem superior */
+    .footer {
+  font-family: Arial, sans-serif;
+  font-size: 18px;
+  color: #00672f;
+}
+.contact-info, .follow-us, .about {
+  display: inline-block;
+  vertical-align: top;
+  margin-right: 20px;
+}
+.social-links a {
+  display: block;
+  margin-bottom: 5px;
 }
 
+    .center-text {
+  text-align: center;
+  color: #00672f;
+}
+
+.follow-us {
+  text-align: center;
+  color: #00672f;
+  
+}
+.social-links a {
+  display: inline-block;
+  margin: 0 5px;
+}
+.social-links img {
+  width: 24px; /* ou o tamanho que desejar */
+  height: auto;
+}
 
 
   </style>
 </head>
-
 <body>
   <div class="container">
     <div class="content-box">
@@ -81,29 +108,26 @@
         <h1 style="color: #00672f;">Boletim Informativo</h1>
         <tr>
           <td align="center" valign="top"
-          style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 10px;"
-          align="left">
+            style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 10px;"
+            align="left">
             <strong>{{dataAtual}}</strong>
           </td>
         </tr>
       </div>
     </div>
-    
-    <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;">
+<div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;">
       <td
         style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 30px;"
         align="left">
-    
-        <i>Acorda,<strong> AgroCP</strong>! Pontualmente às 07:00 de cada dia, é hora de se revitalizar com as mais vibrantes notícias do mundo agro e negócios. Comprometidos em manter nossos parceiros e colaboradores sempre informados, entregamos a você, todas as manhãs, uma seleção rica de insights e tendências que vão mantê-lo atualizado e estrategicamente preparado para enfrentar os desafios do dia.<em>&nbsp;</em><br>
-
-    
-        </i>
+        <i>Acorda,<strong> AgroCP</strong>! Pontualmente às 07:00 de cada dia, é hora de se revitalizar com as mais
+          vibrantes notícias do mundo agro e negócios. Comprometidos em manter nossos parceiros e colaboradores sempre
+          informados, entregamos a você, todas as manhãs, uma seleção rica de insights e tendências que vão mantê-lo
+          atualizado e estrategicamente preparado para enfrentar os desafios do dia.<em>&nbsp;</em><br> </i>
       </td>
     </div>
-   
-    <h2>Clima em Três Pontas, MG</h2>
-    <!-- Conteúdo da previsão do tempo atual aqui -->
-    
+<h2>Clima em Três Pontas, MG</h2>
+<!-- Conteúdo da previsão do tempo atual aqui -->
+
     {{#if previsaoTempo}}
     <div class="weather-current">
       <img src="{{previsaoTempo.iconeUrl}}" alt="Ícone do Tempo" style="width: 50px; height: 50px;">
@@ -128,172 +152,153 @@
     {{else}}
     <p>Previsão do tempo não disponível no momento.</p>
     {{/if}}
-    <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
-
-    <!-- Notícias -->
+<div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
+<!-- Notícias -->
     <h2>Últimas Notícias</h2>
     <p>As notícias mais recentes do setor agro.</p>
     <div class="box">
-        <table>
-            {{#each noticias}}
-            <tr>
-                <td style="padding-right: 10px;">
-                    <!-- Aqui a imagem extraída é exibida -->
-                    <img src="{{this.imagem}}" alt="Imagem da notícia" width="150">
-                </td>
-                <td>
-                    <!-- O título da notícia é exibido como um link -->
-                    <p><strong>{{this.titulo}}</strong></p>
-                    <!-- Botão 'Leia Mais' -->
-                    <p><a href="{{this.link}}" style="background-color: #00672f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">Leia Mais</a></p>
-                </td>
-            </tr>
-            {{/each}}
-        </table>
+      <table>
+        {{#each noticias}}
+        <tr>
+          <td style="padding-right: 10px;">
+            <!-- Aqui a imagem extraída é exibida -->
+            <img src="{{this.imagem}}" alt="Imagem da notícia" width="150">
+          </td>
+          <td>
+            <!-- O título da notícia é exibido como um link -->
+            <p><strong>{{this.titulo}}</strong></p>
+            <!-- Botão 'Leia Mais' -->
+            <p><a href="{{this.link}}"
+                style="background-color: #00672f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">Leia
+                Mais</a></p>
+          </td>
+        </tr>
+        {{/each}}
+      </table>
     </div>
-    
-
-    <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
-
-    <!-- Cotações -->
-<h2>Cotações de Hoje</h2>
-<p>Confira as últimas cotações de café, soja e milho.</p>
-<table width="100%" border="0" cellpadding="0" cellspacing="0">
-
-  <!-- Cotações de Café -->
-  <tr>
-    <td align="left" valign="top" style="display: block; margin-bottom: 10px;">
-      <div class="weather-item">
-        <img src="https://iili.io/JzFXWLg.png" alt="Ícone de Café" style="width: 20px; height: 20px;">
-        <br>
-        <strong>CAFÉ ICE - NOVA YORK</strong>
-        <!-- Iteração pelas cotações de Café -->
-        {{#each cotacoes.cotacoesCafe as |cotacao|}}
-          <p>{{cotacao.descricao}}: <br>
-            Fechamento - R$ {{cotacao.fechamento}} 
-            <img src="{{cotacao.iconClass}}" alt="Variação" width="20"> <br>
-            Fechamento Anterior - R$ {{cotacao.fechamentoAnterior}}
-          </p>
-        {{/each}}
-      </div>
-    </td>
-  </tr>
-  <br>
-  
-  <!-- Cotações de Soja -->
-  <tr>
-    <td align="left" valign="top" style="display: block; margin-bottom: 10px;">
-      <div class="weather-item">
-        <img src="https://iili.io/JzFXVhF.png" alt="Ícone de Soja" style="width: 20px; height: 20px;">
-        <br>
-        <strong>SOJA - CBOT</strong>
-        <!-- Iteração pelas cotações de Soja -->
-        {{#each cotacoes.cotacoesSoja as |cotacao|}}
-          <p>{{cotacao.descricao}}: <br>
-            Fechamento - R$ {{cotacao.fechamento}}
-            <img src="{{cotacao.iconClass}}" alt="Variação" width="20"> <br>
-            Fechamento Anterior - R$ {{cotacao.fechamentoAnterior}}
-          </p>
-        {{/each}}
-      </div>
-    </td>
-  </tr>
-  <br>
-
-  <!-- Cotações de Milho -->
-  <tr>
-    <td align="left" valign="top" style="display: block; margin-bottom: 10px;">
-      <div class="weather-item">
-        <img src="https://iili.io/JzFXMI1.png" alt="Ícone de Milho" style="width: 20px; height: 20px;">
-        <br>
-        <strong>MILHO BM&F - SÃO PAULO	</strong>
-        <!-- Iteração pelas cotações de Milho -->
-        {{#each cotacoes.cotacoesMilho as |cotacao|}}
-          <p>{{cotacao.descricao}}: <br>
-            Fechamento - R$ {{cotacao.fechamento}}
-            <img src="{{cotacao.iconClass}}" alt="Variação" width="20"> <br>
-            Fechamento Anterior - R$ {{cotacao.fechamentoAnterior}}
-          </p>
-        {{/each}}
-      </div>
-    </td>
-  </tr>
-
+<div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
+<!-- Cotações -->
+    <h2>Cotações de Hoje</h2>
+    <p>Confira as últimas cotações de café, soja e milho.</p>
+    <table width="100%" border="0" cellpadding="0" cellspacing="0">
+<!-- Cotações de Café -->
+      <tr>
+        <td align="left" valign="top" style="display: block; margin-bottom: 10px;">
+          <div class="weather-item">
+            <img src="https://iili.io/JzFXWLg.png" alt="Ícone de Café" style="width: 20px; height: 20px;">
+            <br>
+            <strong>CAFÉ ICE - NOVA YORK</strong>
+            <!-- Iteração pelas cotações de Café -->
+            {{#each cotacoes.cotacoesCafe as |cotacao|}}
+            <p>{{cotacao.descricao}}: <br>
+              Fechamento - R$ {{cotacao.fechamento}}
+              <img src="{{cotacao.iconClass}}" alt="Variação" width="20"> <br>
+              Fechamento Anterior - R$ {{cotacao.fechamentoAnterior}}
+            </p>
+            {{/each}}
+          </div>
+        </td>
+      </tr>
+      <br>
+<!-- Cotações de Soja -->
+      <tr>
+        <td align="left" valign="top" style="display: block; margin-bottom: 10px;">
+          <div class="weather-item">
+            <img src="https://iili.io/JzFXVhF.png" alt="Ícone de Soja" style="width: 20px; height: 20px;">
+            <br>
+            <strong>SOJA - CBOT</strong>
+            <!-- Iteração pelas cotações de Soja -->
+            {{#each cotacoes.cotacoesSoja as |cotacao|}}
+            <p>{{cotacao.descricao}}: <br>
+              Fechamento - R$ {{cotacao.fechamento}}
+              <img src="{{cotacao.iconClass}}" alt="Variação" width="20"> <br>
+              Fechamento Anterior - R$ {{cotacao.fechamentoAnterior}}
+            </p>
+            {{/each}}
+          </div>
+        </td>
+      </tr>
+      <br>
+<!-- Cotações de Milho -->
+      <tr>
+        <td align="left" valign="top" style="display: block; margin-bottom: 10px;">
+          <div class="weather-item">
+            <img src="https://iili.io/JzFXMI1.png" alt="Ícone de Milho" style="width: 20px; height: 20px;">
+            <br>
+            <strong>MILHO BM&F - SÃO PAULO </strong>
+            <!-- Iteração pelas cotações de Milho -->
+            {{#each cotacoes.cotacoesMilho as |cotacao|}}
+            <p>{{cotacao.descricao}}: <br>
+              Fechamento - R$ {{cotacao.fechamento}}
+              <img src="{{cotacao.iconClass}}" alt="Variação" width="20"> <br>
+              Fechamento Anterior - R$ {{cotacao.fechamentoAnterior}}
+            </p>
+            {{/each}}
+          </div>
+        </td>
+      </tr>
 </table>
-
-
+<div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
+</table>
+<!-- Conteúdo adicional conforme necessário -->
+<h2>Resumo do Mercado</h2>
+<p>Últimas Notícias do setor Financeiro.</p>
+<div class="box">
+    <table>
+        {{#each noticiasMercado}}
+        <tr>
+            <td>
+                <!-- Título da notícia sem link -->
+                <p><strong>{{this.titulo}}</strong></p>
+                <p><a href="{{this.link}}"
+                    style="background-color: #00672f; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px; font-size: 14px;">Leia
+                    Mais</a></p><br>
+            </td>
+        </tr>
+        {{/each}}
+    </table>
+</div>
 
 <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
-  
+<br>
+<!-- Resto do conteúdo permanece o mesmo -->
 
-  </table>
-
-    <!-- Conteúdo adicional conforme necessário -->
-    <div class="box">
-      <div class="market-news-section">
-        <h2>Análises de Resumo do Mercado</h2>
-        <table>
-          {{#each noticiasMercado}}
-          <tr>
-            <td style="padding-right: 10px;">
-              <a href="{{this.link}}">
-                <img src="https://iili.io/JzIVcNa.png" alt="Leia Mais" style="width: 50px; height: auto;">
-              </a>
-            </td>
-            <td>
-              <p><strong><a href="{{this.link}}">{{this.titulo}}</a></strong></p>
-              <p>{{this.descricao}}</p>
-              <!-- Remova o link de texto "Leia mais" -->
-            </td>
-          </tr>
-          {{/each}}
-        </table>
-      </div>
+<div class="footer">
+  <div class="about">
+    <div class = "about-um">
+    <strong>Sobre</strong>
+    <p>A AgroCP se dedica a inovar no agronegócio, oferecendo soluções sustentáveis e de qualidade, com um compromisso firme com segurança, ética e excelência.</p>
+  </div>
+</div>
+  <div class="contact-info">
+    <strong>Contato</strong>
+    <p>Av. Caio de Brito 1491<br>
+       Santana<br>
+       Três Pontas, MG<br>
+       (35) 3265-3227</p>
+  </div>
+  <div class="follow-us">
+    <strong>Siga a AgroCP</strong>
+    <div class="social-links">
+      <a href="https://www.instagram.com/agro.cp/" title="Instagram">
+        <img src="https://iili.io/JzI9Dx9.png" alt="Instagram">
+      </a>
+      <a href="https://www.linkedin.com/company/agro-cp/mycompany/" title="LinkedIn">
+        <img src="https://iili.io/JzI9miu.png" alt="LinkedIn">
+      </a>
+      <a href="https://www.facebook.com/cpagricola/?locale=pt_BR" title="Facebook">
+        <img src="https://iili.io/Jz0tQ5X.png" alt="Facebook">
+      </a>
+      <a href="https://agrocp.agr.br/agro/" title="Nosso Site">
+        <img src="https://iili.io/JzIfG4t.png" alt="Site">
+      </a>
     </div>
-    
-         
-
-    
-      </div>
-      
-    </div>
-    
-    </div>
-  </td>
-</tr>
   </div>
 
-    
-  <!-- Footer -->
-  <table class="responsive-table" width="100%" border="0" cellspacing="0" cellpadding="0"
-  style="background-color: #ffffff;">
-  <tr>
-    <td align="center" bgcolor="#006937" style="padding: 10px; color: #ffffff;">
-      <h3 style="font-size: 16px;">&copy;AgroCP 2023</h3>
-    </td>
-  </tr>
-  <tr>
-    <td align="center" style="padding: 20px 0;">
-      <p style="font-size: 14px; color: #666;">Soluções AgroInteligentes</p>
-      <!-- Social Icons -->
-      <a href="https://www.linkedin.com/company/agro-cp/mycompany/" target="_blank" rel="noopener"
-        style="text-decoration: none;">
-        <img src="https://iili.io/JzI9miu.png" alt="LinkedIn"
-          style="width: 34px; height: 34px; margin-right: 20px;">
-      </a>
-      
-      <a href="https://www.instagram.com/agro.cp/" target="_blank" rel="noopener"
-        style="text-decoration: none;">
-        <img src="https://iili.io/JzI9Dx9.png" alt="Instagram"
-          style="width: 34px; height: 34px; margin-right: 20px;">
-      </a>
-      
-      <a href="https://agrocp.agr.br/agro" style="text-decoration: none;">
-        <img src="https://iili.io/JzIfG4t.png" alt="Site" style="width: 34px; height: 34px;">
-      </a>
-    </td>
-  </tr>
-</table>
-  
+
+</div>
+</body>
 
 </html>
+
+     

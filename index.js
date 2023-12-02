@@ -16,40 +16,19 @@ async function getMarketNews(url) {
     try {
         const feed = await parser.parseURL(url);
 
-        const newsPromises = feed.items.map(async (item) => {
-            // Função para obter a URL da imagem a partir do HTML da página do artigo
-            async function getImageUrl(articleUrl) {
-                try {
-                    const response = await axios.get(articleUrl);
-                    const $ = cheerio.load(response.data);
-                    // Encontre a tag de imagem e obtenha o valor do atributo "src"
-                    const imageUrl = $('img').attr('src');
-                    return imageUrl;
-                } catch (error) {
-                    console.error('Erro ao obter a imagem:', error.message);
-                    return null;
-                }
-            }
+        const news = feed.items.map(item => ({
+            titulo: item.title,
+            link: item.link,
+            dataPublicacao: item.pubDate // ou item.isoDate, dependendo da estrutura do feed RSS
+        }));
 
-            const imageUrl = await getImageUrl(item.link);
-
-            return {
-                titulo: item.title,
-                descricao: item.contentSnippet,
-                link: item.link,
-                imagem: imageUrl,
-            };
-        });
-
-        // Aguarde todas as promessas de obtenção das notícias e imagens
-        const newsWithImages = await Promise.all(newsPromises);
-
-        return newsWithImages;
+        return news;
     } catch (error) {
         console.error('Erro ao obter notícias:', error.message);
         return [];
     }
 }
+
 
 async function buscarPrevisaoTempo() {
     try {
@@ -282,7 +261,7 @@ async function main() {
     const noticiasFuturoAgro = await extrairNoticias('https://globorural.globo.com/especiais/futuro-do-agro/');
     const noticiasGloboRural = await extrairNoticias('https://globorural.globo.com/ultimas-noticias');
 
-    const noticiasMercado = await getMarketNews('https://br.investing.com/rss/market_overview.rss');
+    const noticiasMercado = await getMarketNews('https://br.investing.com/rss/news.rss');
     const cotacoes = await buscarCotacoes();
 
 
