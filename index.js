@@ -2,13 +2,13 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const nodemailer = require('nodemailer');
 const Parser = require('rss-parser');
-const sharp = require('sharp');
+//const sharp = require('sharp');
 const handlebars = require('handlebars');
 const fs = require('fs').promises;
-const path = require('path');
-const sanitize = require('sanitize-filename');
+//const path = require('path');
+//const sanitize = require('sanitize-filename');
 
-//const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
+
 
 const parser = new Parser();
 
@@ -210,7 +210,7 @@ async function buscarCotacoes() {
 
         // Índices atualizados conforme a nova estrutura da tabela
         // Segundo elemento para descrição, sexto para fechamento e sétimo para fechamento anterior
-        const indiceDescricao = 2;
+        const indiceDescricao = 0;
         const indiceFechamento = 6;
         const indiceFechamentoAnterior = 7;
 
@@ -234,27 +234,39 @@ async function extrairCotacoes(url, produto) {
         const response = await axios.get(url);
         const $ = cheerio.load(response.data);
 
-        let cotacao = null;
+        let cotacoes = [];
         let encontrouProduto = false;
-
+        const iconUp = 'https://iili.io/JzYQ2fe.png';
+        const iconDown = 'https://iili.io/JzYQJs9.png';
+        
         $('table tr').each((index, element) => {
-            // Verifica se a linha corresponde ao cabeçalho do produto
-            if ($(element).text().includes(produto)) {
+            const textoLinha = $(element).text();
+
+            // Verifica se a linha corresponde ao cabeçalho do produto e marca o início das cotações do produto
+            if (textoLinha.includes(produto) && !encontrouProduto) {
                 encontrouProduto = true;
             }
+            // Se encontrou o cabeçalho de outro produto, marca o fim das cotações do produto
+            else if (!textoLinha.includes(produto) && encontrouProduto && $(element).find('td').length <= 1) {
+                return false; // Encerra o loop
+            }
 
-            // Se encontrou o produto e está na primeira linha de dados
+            // Se encontrou o produto e está em uma linha de dados
             if (encontrouProduto && $(element).find('td').length > 1) {
-                const descricao = $(element).find('td:nth-child(2)').text().trim(); // Descrição
-                const fechamento = $(element).find('td:nth-child(6)').text().trim(); // Fechamento
-                const fechamentoAnterior = $(element).find('td:nth-child(7)').text().trim(); // Fechamento anterior
-                cotacao = { descricao, fechamento, fechamentoAnterior };
-                return false; // Sair do loop
+                const descricao = $(element).find('td:nth-child(2)').text().trim();
+                const fechamento = parseFloat($(element).find('td:nth-child(6)').text().trim().replace(',', '.'));
+                const fechamentoAnterior = parseFloat($(element).find('td:nth-child(7)').text().trim().replace(',', '.'));
+
+                if (!isNaN(fechamento) && !isNaN(fechamentoAnterior)) {
+                    let iconClass = fechamento > fechamentoAnterior ? iconUp : (fechamento < fechamentoAnterior ? iconDown : '');
+
+                    cotacoes.push({ descricao, fechamento, fechamentoAnterior, iconClass });
+                }
             }
         });
 
-        console.log(`${produto}:`, cotacao);
-        return cotacao;
+        console.log(`${produto}:`, cotacoes);
+        return cotacoes;
     } catch (error) {
         console.error(`Erro ao extrair cotações de ${produto}: ${error}`);
         return null;
