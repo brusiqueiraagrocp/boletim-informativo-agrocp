@@ -5,171 +5,166 @@ const Parser = require('rss-parser');
 const sharp = require('sharp');
 const handlebars = require('handlebars');
 const fs = require('fs').promises;
+const path = require('path');
+const sanitize = require('sanitize-filename');
 
-
-
-//Adicione no topo do seu arquivo
 //const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
 
 const parser = new Parser();
 
 async function getMarketNews(url) {
     try {
-      const feed = await parser.parseURL(url);
-  
-      const newsPromises = feed.items.map(async (item) => {
-        // Função para obter a URL da imagem a partir do HTML da página do artigo
-        async function getImageUrl(articleUrl) {
-          try {
-            const response = await axios.get(articleUrl);
-            const $ = cheerio.load(response.data);
-            // Encontre a tag de imagem e obtenha o valor do atributo "src"
-            const imageUrl = $('img').attr('src');
-            return imageUrl;
-          } catch (error) {
-            console.error('Erro ao obter a imagem:', error.message);
-            return null;
-          }
-        }
-  
-        const imageUrl = await getImageUrl(item.link);
-  
-        return {
-          titulo: item.title,
-          descricao: item.contentSnippet,
-          link: item.link,
-          imagem: imageUrl,
-        };
-      });
-  
-      // Aguarde todas as promessas de obtenção das notícias e imagens
-      const newsWithImages = await Promise.all(newsPromises);
-  
-      return newsWithImages;
-    } catch (error) {
-      console.error('Erro ao obter notícias:', error.message);
-      return [];
-    }
-  }
-  
-  // Exemplo de uso:
-  const url = 'https://br.investing.com/rss/market_overview.rss'; // URL do feed RSS
-  getMarketNews(url)
-    .then((news) => {
-      console.log('Notícias com imagens:', news);
-    })
-    .catch((err) => {
-      console.error('Erro:', err);
-    });
+        const feed = await parser.parseURL(url);
 
-
-
-/*const iconesClimaticos = {
-    "Ensolarado": "https://iili.io/JxP9qSp.png",
-    "Parcialmente Nublado": "https://iili.io/JxP9nRI.png",
-    "Nublado": "https://iili.io/JxP9KKv.png",
-    "Chuva": "https://iili.io/JxP9CHN.png",
-    "Neve": "https://iili.io/JxP9flR.png",
-    "Vento": "https://iili.io/JxP9oNt.png",
-    "Tempestade": "https://iili.io/JxP9xDX.png"
-};*/
-
-
-
-
-
-/*async function buscarPrevisaoTempo() {
-    try {
-        const url = 'https://bolsa.cocatrel.com.br/climatempo';
-        const response = await axios.get(url);
-        const $ = cheerio.load(response.data);
-        const previsaoTempo = [];
-
-        $('h6').each((i, element) => {
-            const tituloCondicao = $(element).text().trim();
-            const imagemUrl = $(element).find('img').attr('src'); // Use .find em vez de .next
-        
-            if (tituloCondicao && imagemUrl) {
-                previsaoTempo.push({ tituloCondicao, imagemUrl });
+        const newsPromises = feed.items.map(async (item) => {
+            // Função para obter a URL da imagem a partir do HTML da página do artigo
+            async function getImageUrl(articleUrl) {
+                try {
+                    const response = await axios.get(articleUrl);
+                    const $ = cheerio.load(response.data);
+                    // Encontre a tag de imagem e obtenha o valor do atributo "src"
+                    const imageUrl = $('img').attr('src');
+                    return imageUrl;
+                } catch (error) {
+                    console.error('Erro ao obter a imagem:', error.message);
+                    return null;
+                }
             }
-            
+
+            const imageUrl = await getImageUrl(item.link);
+
+            return {
+                titulo: item.title,
+                descricao: item.contentSnippet,
+                link: item.link,
+                imagem: imageUrl,
+            };
         });
 
-        
+        // Aguarde todas as promessas de obtenção das notícias e imagens
+        const newsWithImages = await Promise.all(newsPromises);
 
-        return previsaoTempo;
+        return newsWithImages;
+    } catch (error) {
+        console.error('Erro ao obter notícias:', error.message);
+        return [];
+    }
+}
+
+async function buscarPrevisaoTempo() {
+    try {
+        const latitude = -21.3393; // Substitua pela latitude desejada
+        const longitude = -45.4243; // Substitua pela longitude desejada
+        const apiKey = 'a5f2bff3e3628b96b5250aee6e0e8121'; // Substitua pela sua chave da API do OpenWeatherMap
+
+        const iconesClimaticos = {
+            "Clear": "https://iili.io/JzTxOXa.png", // Ensolarado
+            "Clouds": "https://iili.io/JzTxjmF.png", // Nublado
+            "Rain": "https://iili.io/JzTxhe1.png", // Chuva
+            "Snow": "https://iili.io/JzTxNzg.png", // Neve
+            "Windy": "https://iili.io/JzTxeLJ.png", // Vento
+            "Storm": "https://iili.io/JzTxvqv.png", // Tempestade
+            // Adicione mais condições conforme necessário
+        };
+
+        const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${apiKey}&units=metric&lang=pt_br`;
+        const response = await axios.get(url);
+        const previsao = response.data;
+
+        const condicaoClimaticaAtual = previsao.list[0].weather[0].main;
+        const iconeUrl = iconesClimaticos[condicaoClimaticaAtual] || 'https://iili.io/JzTzFBj.png'; // URL do ícone padrão para condições não mapeadas
+
+        const previsaoAtual = {
+            iconeUrl: iconeUrl,
+            temperaturaAtual: previsao.list[0].main.temp,
+            temperaturaMinima: previsao.list[0].main.temp_min,
+            temperaturaMaxima: previsao.list[0].main.temp_max,
+            probabilidadeChuva: previsao.list[0].pop, // valor de 0 a 1
+            previsaoProximosDias: previsao.list.slice(1, 8).map(item => ({
+                data: item.dt_txt,
+                minima: item.main.temp_min,
+                maxima: item.main.temp_max,
+                probabilidadeChuva: item.pop
+            }))
+        };
+        console.log(previsaoAtual);
+        return previsaoAtual;
     } catch (error) {
         console.error(`Erro ao buscar previsão do tempo: ${error}`);
         return null;
     }
 }
-*/
-
-// Usar a função e imprimir os resultados
-//buscarPrevisaoTempo().then(data => console.log(data));
-
 
 const formatDate = () => {
     const date = new Date();
     return date.toLocaleDateString('pt-BR', {
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric'
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
     });
-  };
-  const dataAtual = formatDate();
-
-
+};
+const dataAtual = formatDate();
 
 async function extrairNoticias(url) {
     try {
         const { data } = await axios.get(url);
         const $ = cheerio.load(data);
         const noticias = [];
-        const imagemPadrao = 'https://iili.io/JxPVGqB.png'; // URL da imagem padrão
+        const imagemPadraoG1 = 'https://iili.io/JzulwDx.png'; // URL da imagem padrão
+        const imagemPadraoCanalRural = 'https://iili.io/JzulhAb.png';
+        const imagemPadraoGloboRural = 'https://iili.io/JzuljNj.jpg';
 
         let seletorTitulo, seletorLink, seletorImagem;
 
-        if (url.includes('g1.globo.com')) {
+        if (url.includes('globorural.globo.com')) {
+            seletorTitulo = '.feed-post-link';
+            seletorLink = 'h2.feed-post-link a';
+            seletorImagem = 'img.bstn-fd-picture-image';
+        } else if (url.includes('g1.globo.com')) {
             seletorTitulo = 'p';
             seletorLink = '.feed-post-link';
             seletorImagem = '.bstn-fd-item-cover picture img'; // Seletor atualizado para imagens do G1
         } else if (url.includes('canalrural.com.br')) {
             seletorTitulo = '.post-title-feed-xl, .post-title-feed-lg';
             seletorLink = '.feed-link';
-            seletorImagem = 'img'; // Seletor para a imagem no Canal Rural
+            seletorImagem = 'figure.feed-figure.hover-overlay img'; // Seletor para a imagem no Canal Rural
         }
 
-        $(seletorLink).each(async (i, element) => {
-            const titulo = $(element).find(seletorTitulo).text().trim();
-            const link = $(element).attr('href');
-            let imagemUrl;
+        $(seletorLink).each((i, element) => {
+          let titulo;
+          if (url.includes('canalrural.com.br')) {
+              titulo = $(element).find(seletorTitulo).text().trim(); // Extrai o título com o seletor específico do Canal Rural
+          } else {
+              titulo = $(element).text().trim(); // Para os outros sites
+          }
+  
+          const link = $(element).attr('href');
+              
+          
+          let imagemUrl;
+  
 
-            if (url.includes('g1.globo.com')) {
-                imagemUrl = $(element).closest('.feed-post').find(seletorImagem).attr('src');
+            if (url.includes('globorural.globo.com')) {
+                imagemUrl = $(element).closest('.feed-post-body').find(seletorImagem).attr('src') || imagemPadraoGloboRural;
+            } else if (url.includes('g1.globo.com')) {
+                imagemUrl = $(element).closest('.feed-post').find(seletorImagem).attr('src') || imagemPadraoG1;
             } else if (url.includes('canalrural.com.br')) {
-                imagemUrl = $(element).find(seletorImagem).attr('data-src') || $(element).find(seletorImagem).attr('src');
+                imagemUrl = $(element).closest('.feed-post').find(seletorImagem).attr('src') || imagemPadraoCanalRural;
             }
 
-            // Se não encontrar a imagem, usa a imagem padrão
-            if (!imagemUrl || imagemUrl.includes('data:image/svg+xml')) {
-                imagemUrl = imagemPadrao;
-            } else if (imagemUrl.endsWith('.svg')) {
-                // Se a imagem for um SVG, converte para PNG
-                const pngBuffer = await sharp(Buffer.from(data)).png().toBuffer();
-                imagemUrl = `data:image/png;base64,${pngBuffer.toString('base64')}`;
-            }
+            
 
-            noticias.push({ titulo, link, imagem: imagemUrl });
-        });
+          // Adiciona a notícia com a URL da imagem
+          noticias.push({ titulo, link, imagem: imagemUrl});
+      });
 
-        console.log(noticias);
-        return noticias;
-    } catch (error) {
-        console.error(`Erro ao extrair notícias de ${url}:`, error);
-        return [];
-    }
+      console.log(noticias);
+      return noticias;
+  } catch (error) {
+      console.error(`Erro ao extrair notícias de ${url}:`, error);
+      return [];
+  }
 }
 
 function filtrarPorPalavrasChave(noticias, palavrasChave) {
@@ -208,8 +203,6 @@ async function enviarEmail(destinatario, assunto, html) {
         console.error(`Erro ao enviar e-mail: ${error}`);
     }
 }
-
-
 
 async function buscarCotacoes() {
     try {
@@ -268,38 +261,42 @@ async function extrairCotacoes(url, produto) {
     }
 }
 
-
-
-
 async function main() {
-    //const idCidadeTresPontas = '39227';
+
 
     const noticiasG1Agronegocios = await extrairNoticias('https://g1.globo.com/economia/agronegocios/');
     const noticiasSulDeMinas = await extrairNoticias('https://g1.globo.com/mg/sul-de-minas/ultimas-noticias/');
     const noticiasCanalRural = await extrairNoticias('https://www.canalrural.com.br/agricultura/');
     const noticiasFuturoAgro = await extrairNoticias('https://globorural.globo.com/especiais/futuro-do-agro/');
-    const noticiasGloboRural = await extrairNoticias('https://globorural.globo.com/');
+    const noticiasGloboRural = await extrairNoticias('https://globorural.globo.com/ultimas-noticias');
 
     const noticiasMercado = await getMarketNews('https://br.investing.com/rss/market_overview.rss');
     const cotacoes = await buscarCotacoes();
 
 
     const palavrasChave = [
-        'café', 'soja', 'milho', 'agro', 'agronegócio',
+        'café', 'soja', 'milho', 'agro', 'agronegócio', 'gado', 'leite',
         'trigo', 'cana-de-açúcar', 'pecuária', 'sustentabilidade',
-        'exportação', 'mercado', 'tecnologia agrícola', 'política agrícola',
-        'produção orgânica', 'fertilizantes', 'biotecnologia', 'irrigação',
-        'segurança alimentar', 'comércio internacional', 'desenvolvimento rural', 'agrotóxico', 'Três Pontas',
-        'Fertilizante', 'Fertilizantes', 'Adubo', 'Organomineral', 'Suíno', 'Equino', 'Bovino', 'Proteína', 'Santana da Vargem'
+        'tecnologia agrícola', 'política agrícola', 'produção orgânica',
+        'biotecnologia', 'irrigação', 'segurança alimentar',
+        'comércio internacional', 'desenvolvimento rural', 'agrotóxico',
+        'Três Pontas', 'fertilizantes', 'adubos', 'organomineral',
+        'suíno', 'equino', 'bovino', 'proteína animal', 'cultivo sustentável',
+        'agricultura de precisão', 'energia renovável no campo',
+        'gestão agrícola', 'mercado agrícola', 'exportação agrícola',
+        'inovação no campo', 'políticas de subsídio', 'agricultura familiar',
+        'seguro rural', 'tecnologias verdes', 'agroecologia',
+        'conservação do solo', 'manejo de pragas', 'melhoramento genético'
     ];
+
     const noticiasFiltradas = filtrarPorPalavrasChave([...noticiasG1Agronegocios, ...noticiasFuturoAgro, ...noticiasSulDeMinas, ...noticiasCanalRural, ...noticiasGloboRural], palavrasChave);
 
     const previsaoTempo = await buscarPrevisaoTempo();
 
     const templateHtml = await fs.readFile('template.html', 'utf8');
     const template = handlebars.compile(templateHtml);
-    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes, noticiasMercado: noticiasMercado, dataAtual:dataAtual });
-    
+    const htmlFinal = template({ noticias: noticiasFiltradas, previsaoTempo: previsaoTempo, cotacoes: cotacoes, noticiasMercado: noticiasMercado, dataAtual: dataAtual });
+
 
     await enviarEmail('bruno.siqueira@agrocp.agr.br', 'Boletim Informativo AgroCP', htmlFinal);
 }
