@@ -261,7 +261,7 @@ async function main() {
     const noticiasFuturoAgro = await extrairNoticias('https://globorural.globo.com/especiais/futuro-do-agro/');
     const noticiasGloboRural = await extrairNoticias('https://globorural.globo.com/ultimas-noticias');
 
-    const noticiasMercado = await getMarketNews('https://br.investing.com/rss/news.rss');
+    const noticiasMercado = await getMarketNews('https://br.investing.com/rss/market_overview.rss');
     const cotacoes = await buscarCotacoes();
 
 
