@@ -7,7 +7,7 @@ const fs = require('fs').promises;
 
 
 //Adicione no topo do seu arquivo
-const apiKeyAccuWeather = '	DjHROZ2m0EasT2mugUGeiKcCk19ReDPE';
+const apiKeyAccuWeather = '	APIKEY'; 
 
 const parser = new Parser();
 
