@@ -12,17 +12,51 @@
       font-family: Arial, sans-serif;
       color: #333;
     }
+    .weather-current {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  margin-bottom: 20px;
+}
 
-    .container {
-      max-width: 520px;
-      margin: auto;
-      background-color: #ffffff;
-      padding: 50px;
-      border: 10px solid #00672f;
+.weather-details {
+  margin-top: 10px;
+}
 
-      /* Verde escuro quase transparente */
+.weather-item {
+  margin-bottom: 5px;
+}
 
-    }
+.weather-next-hours-small {
+  margin-top: 10px;
+  text-align: left;
+}
+
+.weather-next-hours-small h3 {
+  font-size: 14px;
+  margin-bottom: 5px;
+}
+
+.weather-next-hours-small ul {
+  list-style: none;
+  padding: 0;
+}
+
+.weather-next-hours-small li {
+  margin-bottom: 5px;
+  font-size: 12px;
+}
+
+.weather-next-hours-small strong {
+  font-size: 12px;
+  margin-bottom: 3px;
+}
+
+/* Adicionado para forçar a nova linha após weather-current */
+.weather-current, .weather-next-hours-small {
+  width: 100%;
+  box-sizing: border-box;
+}
 
     a {
       text-decoration: none;
@@ -63,39 +97,30 @@
       /* Margem inferior */
     }
 
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      background-color: #ffffff;
+      padding: 20px;
+      border: 10px solid #00672f;
+    }
+
     .footer {
-  font-family: Arial, sans-serif;
-  font-size: 18px;
-  color: #00672f;
-}
-.contact-info, .follow-us, .about {
-  display: inline-block;
-  vertical-align: top;
-  margin-right: 20px;
-}
-.social-links a {
-  display: block;
-  margin-bottom: 5px;
-}
+      text-align: center;
+      padding: 20px;
+      background-color: #fff;
+      border-top: 5px solid #006732;
+      font-family: Arial, sans-serif;
+      font-size: 14px;
+      color: #006732;
+      box-sizing: border-box; 
+    }
 
-    .center-text {
-  text-align: center;
-  color: #00672f;
-}
-
-.follow-us {
-  text-align: center;
-  color: #00672f;
-  
-}
-.social-links a {
-  display: inline-block;
-  margin: 0 5px;
-}
-.social-links img {
-  width: 24px; /* ou o tamanho que desejar */
-  height: auto;
-}
+    .footer a {
+      text-decoration: none;
+      color: #006732;
+    }
+    
 
 
   </style>
@@ -103,59 +128,80 @@
 <body>
   <div class="container">
     <div class="content-box">
-      <div class="header">
+      <div class="header" style="text-align: center;">
         <img src="https://iili.io/JxPfLVS.png" alt="Logo AgroCP" width="280" height="58">
         <h1 style="color: #00672f;">Boletim Informativo</h1>
-        <tr>
-          <td align="center" valign="top"
-            style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 10px;"
-            align="left">
-            <strong>{{dataAtual}}</strong>
-          </td>
-        </tr>
+        <p style="margin-top: 5px; font-size: 16px;"><strong>{{dataAtual}}</strong></p>
       </div>
     </div>
+  
+  
 <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;">
       <td
         style="font-size: 18px; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 30px;"
         align="left">
-        <i>Acorda,<strong> AgroCP</strong>! Pontualmente às 07:00 de cada dia, é hora de se revitalizar com as mais
+        <i>Acorda,<strong> AgroCP</strong>🚀! Pontualmente às 07:00 de cada dia, é hora de se revitalizar com as mais
           vibrantes notícias do mundo agro e negócios. Comprometidos em manter nossos parceiros e colaboradores sempre
           informados, entregamos a você, todas as manhãs, uma seleção rica de insights e tendências que vão mantê-lo
           atualizado e estrategicamente preparado para enfrentar os desafios do dia.<em>&nbsp;</em><br> </i>
       </td>
     </div>
-<h2>Clima em Três Pontas, MG</h2>
-<!-- Conteúdo da previsão do tempo atual aqui -->
+    
 
-    {{#if previsaoTempo}}
-    <div class="weather-current">
-      <img src="{{previsaoTempo.iconeUrl}}" alt="Ícone do Tempo" style="width: 50px; height: 50px;">
-      <div class="temperature">
-        <strong>{{previsaoTempo.temperaturaAtual}}°C</strong>
-      </div>
-      <div class="weather-details">
-        <div class="weather-item">
-          <img src="https://iili.io/JzTT6mP.png" alt="Ícone de Temperatura Mínima" width="20" height="20">
-          Mínima: {{previsaoTempo.temperaturaMinima}}°C
-        </div>
-        <div class="weather-item">
-          <img src="https://iili.io/JzTT6mP.png" alt="Ícone de Temperatura Máxima" width="20" height="20">
-          Máxima: {{previsaoTempo.temperaturaMaxima}}°C
-        </div>
-        <div class="weather-item">
-          <img src="https://iili.io/JzTT4kB.png" alt="Ícone de Probabilidade de Chuva" width="20" height="20">
-          Probabilidade de Chuva: {{previsaoTempo.probabilidadeChuva}}%
-        </div>
-      </div>
+<h2>🌦️ Clima em Três Pontas, MG</h2>
+<h3 style="font-size: 11px; color: #757575; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 20px; font-weight: normal;">
+  Não queremos que você seja pego de surpresa! Portanto, confira as condições climáticas da área de Três Pontas. Esteja preparado para qualquer mudança climática que possa afetar suas operações agrícolas.
+</h3>
+
+{{#if previsaoTempo}}
+  <div class="weather-current">
+    <img src="{{previsaoTempo.iconeUrl}}" alt="Ícone do Tempo" style="width: 50px; height: 50px;">
+    <div class="temperature">
+      <strong>{{previsaoTempo.temperaturaAtual}}°C</strong>
     </div>
+  </div>
+  <div class="weather-details">
+    <div class="weather-item">
+      🌡️ Mínima: {{previsaoTempo.temperaturaMinima}}°C
+    </div>
+    <div class="weather-item">
+      🌡️ Máxima: {{previsaoTempo.temperaturaMaxima}}°C
+    </div>
+    <div class="weather-item">
+      ☔ Probabilidade de Chuva: {{previsaoTempo.probabilidadeChuva}}%
+    </div>
+  </div>
+  <div class="weather-next-hours-small">
+    {{#if previsaoTempo.previsaoProximosDias.length}}
+      <h3>Próximas Horas</h3>
+      <ul>
+        {{#each previsaoTempo.previsaoProximosDias}}
+          <li>
+            <strong>📅 {{this.data}}</strong>
+            <br>
+            🌡️ Máx. {{this.maxima}}°C
+            <br>
+            ☔ {{this.probabilidadeChuva}}%
+          </li>
+        {{/each}}
+      </ul>
     {{else}}
-    <p>Previsão do tempo não disponível no momento.</p>
+      <p>Previsão para as próximas horas não disponível no momento.</p>
     {{/if}}
+  </div>
+{{else}}
+  <p>Previsão do tempo não disponível no momento.</p>
+{{/if}}
+
 <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
+
+    
+    
+
 <!-- Notícias -->
-    <h2>Últimas Notícias</h2>
-    <p>As notícias mais recentes do setor agro.</p>
+    <h2>📰 Últimas Notícias</h2>
+    
+    <h3 style="font-size: 11px; color: #757575; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 20px; font-weight: normal;">Hoje, trazemos para você as principais manchetes do agronegócio, tudo mastigado e fácil de entender. Saiba o que está acontecendo no campo, nas plantações e nas últimas tendências do setor.</h3>
     <div class="box">
       <table>
         {{#each noticias}}
@@ -178,8 +224,9 @@
     </div>
 <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
 <!-- Cotações -->
-    <h2>Cotações de Hoje</h2>
-    <p>Confira as últimas cotações de café, soja e milho.</p>
+    <h2>🚜 Cotações Agrícolas do Dia</h2>
+    <h3 style="font-size: 11px; color: #757575; border-collapse: collapse; text-align: left; font-family: Georgia, serif; line-height: 20px; font-weight: normal;">Hoje, atualizamos você com as principais cotações do agronegócio, oferecendo uma visão clara sobre o mercado de café, milho e soja. Esteja por dentro das últimas movimentações e tome decisões informadas para sua produção.</h3>
+    
     <table width="100%" border="0" cellpadding="0" cellspacing="0">
 <!-- Cotações de Café -->
       <tr>
@@ -241,7 +288,7 @@
 <div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
 </table>
 <!-- Conteúdo adicional conforme necessário -->
-<h2>Análises de Resumo do Mercado</h2>
+<h2>💹 Mercado Financeiro</h2>
 <img src="https://iili.io/Jz1NvIe.png" alt="Logo Investing" width="150"> 
 <div class="box">
     <table>
@@ -259,46 +306,37 @@
     </table>
 </div>
 
-<div style="border-bottom: 3px solid #00672f; padding-bottom: 20px;"></div>
+
 <br>
 <!-- Resto do conteúdo permanece o mesmo -->
 
+
+
+
+
+     
+
+
+
+
+
+
 <div class="footer">
-  <div class="about">
-    <div class = "about-um">
-    <strong>Sobre</strong>
-    <p>A AgroCP se dedica a inovar no agronegócio, oferecendo soluções sustentáveis e de qualidade, com um compromisso firme com segurança, ética e excelência.</p>
+  <p>&copy; AgroCP 2023 - Todos os direitos reservados</p>
+  <nav>
+    <a href="https://agrocp.agr.br/agro/">Acesse Nosso Site</a> |
+    <a href="https://agrocp.agr.br/agro/produtos/">Portfólio</a> |
+    <a href="https://agrocp.agr.br/agro/quem-somos/">Quem somos</a> |
+    <a href="https://agrocp.agr.br/agro/fale-conosco/">Fale Conosco</a>
+  </nav><br>
+  <div class="footer-logo">
+    <img src="https://iili.io/JxPfLVS.png" alt="AgroCP Logo" width="150">
   </div>
-</div>
-  <div class="contact-info">
-    <strong>Contato</strong>
-    <p>Av. Caio de Brito 1491<br>
-       Santana<br>
-       Três Pontas, MG<br>
-       (35) 3265-3227</p>
-  </div>
-  <div class="follow-us">
-    <strong>Siga a AgroCP</strong>
-    <div class="social-links">
-      <a href="https://www.instagram.com/agro.cp/" title="Instagram">
-        <img src="https://iili.io/JzI9Dx9.png" alt="Instagram">
-      </a>
-      <a href="https://www.linkedin.com/company/agro-cp/mycompany/" title="LinkedIn">
-        <img src="https://iili.io/JzI9miu.png" alt="LinkedIn">
-      </a>
-      <a href="https://www.facebook.com/cpagricola/?locale=pt_BR" title="Facebook">
-        <img src="https://iili.io/Jz0tQ5X.png" alt="Facebook">
-      </a>
-      <a href="https://agrocp.agr.br/agro/" title="Nosso Site">
-        <img src="https://iili.io/JzIfG4t.png" alt="Site">
-      </a>
-    </div>
-  </div>
-
-
 </div>
 </body>
+</div>
 
 </html>
 
-     
+
+
