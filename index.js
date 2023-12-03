@@ -38,7 +38,7 @@ async function buscarPrevisaoTempo() {
          // Coordenadas geográficas e chave da API
         const latitude = -21.3393;
         const longitude = -45.4243;
-        const apiKey = 'ai5f2bff3enter3628b96b5250aienterenter6enter0enter8121'; //API está criptografada
+        const apiKey = 'fwA9jdNSSehUyYVeCnHIZ1PYyyjBn1mAcuAaiiDQH5M'; //apikey está criptografada
         
         // Mapeamento de ícones climáticos para diferentes condições do tempo
         const iconesClimaticos = {
@@ -187,7 +187,7 @@ async function enviarEmail(destinatario, assunto, html) {
         secure: false,
         auth: {
             user: 'no-reply@agrocp.agr.br',
-            pass: 'slflsfmghcnlgnfx'
+            pass: 'MNczkRlXbX8gkuCQ8ZEp5A' //senhaapp está criptografada
         }
     });
 
