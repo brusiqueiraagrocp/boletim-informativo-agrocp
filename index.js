@@ -38,7 +38,7 @@ async function buscarPrevisaoTempo() {
          // Coordenadas geográficas e chave da API
         const latitude = -21.3393;
         const longitude = -45.4243;
-        const apiKey = 'a5f2bff3e3628b96b5250aee6e0e8121';
+        const apiKey = 'ai5f2bff3enter3628b96b5250aienterenter6enter0enter8121'; //API está criptografada
         
         // Mapeamento de ícones climáticos para diferentes condições do tempo
         const iconesClimaticos = {
